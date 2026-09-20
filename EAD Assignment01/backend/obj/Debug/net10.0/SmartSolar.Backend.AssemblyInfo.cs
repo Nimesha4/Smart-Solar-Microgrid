@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmartSolar.Backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+40f415fc46ce306b37c14a4a3077d03b4c220caf")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmartSolar.Backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmartSolar.Backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

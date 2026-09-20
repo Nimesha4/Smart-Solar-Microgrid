@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "o4xy+0ZBptY=",
+  "dgSpecHash": "q0fOL52m7Ds=",
   "success": true,
-  "projectFilePath": "/Users/nimeshajayawickrama/Downloads/EAD Assignment01/backend/SmartSolar.Backend.csproj",
+  "projectFilePath": "/Users/nimeshajayawickrama/Desktop/Smart-Solar-Microgrid/EAD Assignment01/backend/SmartSolar.Backend.csproj",
   "expectedPackageFiles": [
     "/Users/nimeshajayawickrama/.nuget/packages/dnsclient/1.6.1/dnsclient.1.6.1.nupkg.sha512",
     "/Users/nimeshajayawickrama/.nuget/packages/microsoft.aspnetcore.openapi/10.0.5/microsoft.aspnetcore.openapi.10.0.5.nupkg.sha512",
@@ -18,9 +18,9 @@
       "code": "NU1903",
       "level": "Warning",
       "message": "Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc",
-      "projectPath": "/Users/nimeshajayawickrama/Downloads/EAD Assignment01/backend/SmartSolar.Backend.csproj",
+      "projectPath": "/Users/nimeshajayawickrama/Desktop/Smart-Solar-Microgrid/EAD Assignment01/backend/SmartSolar.Backend.csproj",
       "warningLevel": 1,
-      "filePath": "/Users/nimeshajayawickrama/Downloads/EAD Assignment01/backend/SmartSolar.Backend.csproj",
+      "filePath": "/Users/nimeshajayawickrama/Desktop/Smart-Solar-Microgrid/EAD Assignment01/backend/SmartSolar.Backend.csproj",
       "libraryId": "Microsoft.OpenApi",
       "targetGraphs": [
         "net10.0"

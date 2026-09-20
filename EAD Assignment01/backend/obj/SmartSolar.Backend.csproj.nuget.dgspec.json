@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/nimeshajayawickrama/Downloads/EAD Assignment01/backend/SmartSolar.Backend.csproj": {}
+    "/Users/nimeshajayawickrama/Desktop/Smart-Solar-Microgrid/EAD Assignment01/backend/SmartSolar.Backend.csproj": {}
   },
   "projects": {
-    "/Users/nimeshajayawickrama/Downloads/EAD Assignment01/backend/SmartSolar.Backend.csproj": {
+    "/Users/nimeshajayawickrama/Desktop/Smart-Solar-Microgrid/EAD Assignment01/backend/SmartSolar.Backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/nimeshajayawickrama/Downloads/EAD Assignment01/backend/SmartSolar.Backend.csproj",
+        "projectUniqueName": "/Users/nimeshajayawickrama/Desktop/Smart-Solar-Microgrid/EAD Assignment01/backend/SmartSolar.Backend.csproj",
         "projectName": "SmartSolar.Backend",
-        "projectPath": "/Users/nimeshajayawickrama/Downloads/EAD Assignment01/backend/SmartSolar.Backend.csproj",
+        "projectPath": "/Users/nimeshajayawickrama/Desktop/Smart-Solar-Microgrid/EAD Assignment01/backend/SmartSolar.Backend.csproj",
         "packagesPath": "/Users/nimeshajayawickrama/.nuget/packages/",
-        "outputPath": "/Users/nimeshajayawickrama/Downloads/EAD Assignment01/backend/obj/",
+        "outputPath": "/Users/nimeshajayawickrama/Desktop/Smart-Solar-Microgrid/EAD Assignment01/backend/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/nimeshajayawickrama/.nuget/NuGet/NuGet.Config"
