@@ -3,6 +3,96 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Sun, User, IdCard, Mail, Lock, ArrowRight, AlertCircle, Zap, Wrench, ShieldCheck } from 'lucide-react';
 
+/* ------------------------------------------------------------------ */
+/*  Photos: your own copy -> Pexels -> drawn solar artwork.           */
+/*  Save your own photos as /public/solar/<id>.jpg if Pexels is       */
+/*  blocked on your network. Set LOCAL_DIR to '' to skip that step.   */
+/* ------------------------------------------------------------------ */
+const LOCAL_DIR = '/solar';
+const LOGIN_PHOTO = 12243093; // house with rooftop solar panels
+
+const photoSources = (id, w) => [
+  ...(LOCAL_DIR ? [`${LOCAL_DIR}/${id}.jpg`] : []),
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`,
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg`,
+];
+
+function SolarArt({ className = '' }) {
+  const rows = 7;
+  const yAt = i => 430 + 470 * Math.pow(i / rows, 1.5);
+  const half = y => 560 + (y - 430) * 3.4;
+  const items = [];
+  for (let i = 0; i < rows; i++) {
+    const y1 = yAt(i);
+    const y2 = yAt(i + 1) - (3 + i * 2.5);
+    const h1 = half(y1), h2 = half(y2);
+    const pts = `${800 - h1},${y1} ${800 + h1},${y1} ${800 + h2},${y2} ${800 - h2},${y2}`;
+    const cols = [];
+    for (let k = -8; k <= 8; k++) {
+      cols.push(<line key={k} x1={800 + (k * h1) / 8} y1={y1} x2={800 + (k * h2) / 8} y2={y2} stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />);
+    }
+    items.push(
+      <g key={i}>
+        <polygon points={pts} fill="url(#lgArtPanel)" />
+        {cols}
+        <line x1={800 - (h1 + h2) / 2} y1={(y1 + y2) / 2} x2={800 + (h1 + h2) / 2} y2={(y1 + y2) / 2} stroke="rgba(255,255,255,0.14)" strokeWidth="1.5" />
+        <polygon points={pts} fill="url(#lgArtSheen)" />
+      </g>
+    );
+  }
+  return (
+    <svg className={className} viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgArtSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0B3F36" />
+          <stop offset="55%" stopColor="#1F7A69" />
+          <stop offset="100%" stopColor="#F2B15A" />
+        </linearGradient>
+        <radialGradient id="lgArtSun" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor="#FFE7B5" stopOpacity="1" />
+          <stop offset="30%" stopColor="#F7C57A" stopOpacity="0.75" />
+          <stop offset="100%" stopColor="#E08E2B" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="lgArtGround" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#12493E" />
+          <stop offset="100%" stopColor="#071F1A" />
+        </linearGradient>
+        <linearGradient id="lgArtPanel" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#1A4F7A" />
+          <stop offset="100%" stopColor="#0A2140" />
+        </linearGradient>
+        <linearGradient id="lgArtSheen" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+          <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <rect width="1600" height="430" fill="url(#lgArtSky)" />
+      <circle cx="1120" cy="330" r="340" fill="url(#lgArtSun)" />
+      <circle cx="1120" cy="330" r="48" fill="#FFF1D2" />
+      <rect y="420" width="1600" height="480" fill="url(#lgArtGround)" />
+      {items}
+    </svg>
+  );
+}
+
+function Photo({ id, w = 1600, alt = '', className = '' }) {
+  const list = photoSources(id, w);
+  const [i, setI] = useState(0);
+  if (i >= list.length) return <SolarArt className={className} />;
+  return (
+    <img
+      key={list[i]}
+      className={className}
+      src={list[i]}
+      alt={alt}
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={() => setI(n => n + 1)}
+    />
+  );
+}
+
 export default function Register() {
   const [nic, setNic] = useState('');
   const [name, setName] = useState('');
@@ -45,31 +135,48 @@ export default function Register() {
 
         .rg-root {
           min-height: 100vh;
-          display: grid; grid-template-columns: 1fr 1fr;
-          background: #FBFAF7;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 20px;
+          background: #EAEFEF;
           color: #1B2420;
           font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
           -webkit-font-smoothing: antialiased;
         }
+
+        .rg-card {
+          display: grid; 
+          grid-template-columns: 1fr 1fr;
+          max-width: 1080px;
+          width: 100%;
+          background: #FFFFFF;
+          border-radius: 28px;
+          overflow: hidden;
+          box-shadow: 0 24px 54px rgba(11, 63, 54, 0.08), 0 4px 14px rgba(11, 63, 54, 0.04);
+        }
+
         .rg-root *, .rg-root *::before, .rg-root *::after { box-sizing: border-box; }
         .rg-display { font-family: 'Sora', 'Inter', sans-serif; }
 
         /* ---- Left brand panel ---- */
         .rg-panel {
-          position: relative; overflow: hidden;
-          background: linear-gradient(165deg, #146B5C 0%, #0F5548 70%, #0B4239 100%);
-          color: #FFFFFF;
-          padding: 48px;
+          position: relative; overflow: hidden; color: #FFFFFF; background: #0B3F36;
+          padding: 44px 44px; min-height: 640px;
           display: flex; flex-direction: column; justify-content: space-between;
         }
-        .rg-panel::before {
-          content: ''; position: absolute; inset: 0;
-          background:
-            radial-gradient(380px 380px at 85% -8%, rgba(224,142,43,0.28), transparent 65%),
-            radial-gradient(260px 260px at 100% 100%, rgba(255,255,255,0.08), transparent 60%);
-          pointer-events: none;
+        .rg-panel-img {
+          position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+          animation: rg-settle 2.2s cubic-bezier(.2,.7,.2,1) both;
         }
-        .rg-brand { position: relative; display: flex; align-items: center; gap: 12px; }
+        @keyframes rg-settle { from { transform: scale(1.08); } to { transform: scale(1); } }
+        .rg-shade {
+          position: absolute; inset: 0;
+          background: linear-gradient(180deg, rgba(8,42,36,0.78) 0%, rgba(8,42,36,0.38) 38%, rgba(8,42,36,0.94) 100%);
+        }
+        .rg-panel > *:not(.rg-panel-img):not(.rg-shade) { position: relative; }
+
+        .rg-brand { position: relative; display: flex; align-items: center; gap: 12px; text-decoration: none; color: #FFFFFF; }
         .rg-mark {
           width: 36px; height: 36px; border-radius: 10px; flex: none;
           background: linear-gradient(135deg, #E08E2B, #C9701B);
@@ -96,8 +203,8 @@ export default function Register() {
         .rg-role-list span { display: block; font-size: 12.5px; color: rgba(255,255,255,0.65); }
 
         /* ---- Right form panel ---- */
-        .rg-form-wrap { display: flex; align-items: center; justify-content: center; padding: 40px; }
-        .rg-form-inner { width: 100%; max-width: 420px; }
+        .rg-form-wrap { display: flex; align-items: center; justify-content: center; padding: 48px 40px; height: 100%; }
+        .rg-form-inner { width: 100%; max-width: 380px; }
 
         .rg-mobile-brand { display: none; align-items: center; gap: 10px; margin-bottom: 24px; }
         .rg-mobile-brand .rg-mark { width: 30px; height: 30px; border-radius: 8px; }
@@ -157,10 +264,11 @@ export default function Register() {
         .rg-login a:hover { text-decoration: underline; }
 
         @media (max-width: 900px) {
-          .rg-root { grid-template-columns: 1fr; }
+          .rg-root { padding: 0; align-items: flex-start; }
+          .rg-card { grid-template-columns: 1fr; border-radius: 0; box-shadow: none; min-height: 100vh; }
           .rg-panel { display: none; }
           .rg-mobile-brand { display: flex; }
-          .rg-form-wrap { padding: 32px 20px; }
+          .rg-form-wrap { padding: 32px 20px; height: auto; min-height: 100vh; }
         }
         @media (max-width: 460px) {
           .rg-row2 { grid-template-columns: 1fr; }
@@ -168,122 +276,127 @@ export default function Register() {
         @media (prefers-reduced-motion: reduce) { .rg-root * { transition: none !important; } }
       `}</style>
 
-      {/* Left brand panel */}
-      <div className="rg-panel">
-        <div className="rg-brand">
-          <div className="rg-mark"><Sun size={18} color="#FFFFFF" strokeWidth={2.25} /></div>
-          <div>
-            <h1 className="rg-display">Solar Microgrid</h1>
-            <span>Peer-to-peer energy trading</span>
-          </div>
-        </div>
-
-        <div className="rg-panel-copy">
-          <h2 className="rg-display">One account, three ways to take part.</h2>
-          <p>Tell us which seat you'll sit in — you can trade energy, run a hub, or manage the network.</p>
-        </div>
-
-        <div className="rg-role-list">
-          <div>
-            <div className="rg-role-icon"><Zap size={16} /></div>
+      <div className="rg-card">
+        {/* Left brand panel */}
+        <div className="rg-panel">
+          <Photo id={LOGIN_PHOTO} w={1800} className="rg-panel-img" alt="A house with solar panels on the roof" />
+          <div className="rg-shade" />
+          
+          <Link to="/" className="rg-brand">
+            <div className="rg-mark"><Sun size={18} color="#FFFFFF" strokeWidth={2.25} /></div>
             <div>
-              <b>Prosumer</b>
-              <span>Book drop-offs and trade surplus solar energy</span>
+              <h1 className="rg-display">Solar Microgrid</h1>
+              <span>Peer-to-peer energy trading</span>
             </div>
+          </Link>
+
+          <div className="rg-panel-copy">
+            <h2 className="rg-display">One account, three ways to take part.</h2>
+            <p>Tell us which seat you'll sit in — you can trade energy, run a hub, or manage the network.</p>
           </div>
-          <div>
-            <div className="rg-role-icon"><Wrench size={16} /></div>
+
+          <div className="rg-role-list">
             <div>
-              <b>Grid operator</b>
-              <span>Monitor battery slots and confirm handoffs on-site</span>
-            </div>
-          </div>
-          <div>
-            <div className="rg-role-icon"><ShieldCheck size={16} /></div>
-            <div>
-              <b>Backoffice</b>
-              <span>Register hubs and manage accounts network-wide</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right form panel */}
-      <div className="rg-form-wrap">
-        <div className="rg-form-inner">
-          <div className="rg-mobile-brand">
-            <div className="rg-mark"><Sun size={15} color="#FFFFFF" strokeWidth={2.25} /></div>
-            <h1 className="rg-display">Solar Microgrid</h1>
-          </div>
-
-          <h2 className="rg-display">Create your account</h2>
-          <p className="rg-sub">Register in a minute, then sign in to your portal.</p>
-
-          {error && (
-            <div className="rg-error">
-              <AlertCircle size={16} />
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleRegister}>
-            <div className="rg-field">
-              <label>Full name</label>
-              <div className="rg-input-wrap">
-                <User size={16} />
-                <input type="text" placeholder="Jane Perera" value={name} onChange={(e) => setName(e.target.value)} required />
+              <div className="rg-role-icon"><Zap size={16} /></div>
+              <div>
+                <b>Prosumer</b>
+                <span>Book drop-offs and trade surplus solar energy</span>
               </div>
             </div>
+            <div>
+              <div className="rg-role-icon"><Wrench size={16} /></div>
+              <div>
+                <b>Grid operator</b>
+                <span>Monitor battery slots and confirm handoffs on-site</span>
+              </div>
+            </div>
+            <div>
+              <div className="rg-role-icon"><ShieldCheck size={16} /></div>
+              <div>
+                <b>Backoffice</b>
+                <span>Register hubs and manage accounts network-wide</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <div className="rg-row2">
+        {/* Right form panel */}
+        <div className="rg-form-wrap">
+          <div className="rg-form-inner">
+            <div className="rg-mobile-brand">
+              <div className="rg-mark"><Sun size={15} color="#FFFFFF" strokeWidth={2.25} /></div>
+              <h1 className="rg-display">Solar Microgrid</h1>
+            </div>
+
+            <h2 className="rg-display">Create your account</h2>
+            <p className="rg-sub">Register in a minute, then sign in to your portal.</p>
+
+            {error && (
+              <div className="rg-error">
+                <AlertCircle size={16} />
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleRegister}>
               <div className="rg-field">
-                <label>NIC number</label>
+                <label>Full name</label>
                 <div className="rg-input-wrap">
-                  <IdCard size={16} />
-                  <input type="text" placeholder="200015700123" value={nic} onChange={(e) => setNic(e.target.value)} required />
+                  <User size={16} />
+                  <input type="text" placeholder="Jane Perera" value={name} onChange={(e) => setName(e.target.value)} required />
                 </div>
               </div>
-              <div className="rg-field">
-                <label>Password</label>
-                <div className="rg-input-wrap">
-                  <Lock size={16} />
-                  <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+
+              <div className="rg-row2">
+                <div className="rg-field">
+                  <label>NIC number</label>
+                  <div className="rg-input-wrap">
+                    <IdCard size={16} />
+                    <input type="text" placeholder="200015700123" value={nic} onChange={(e) => setNic(e.target.value)} required />
+                  </div>
+                </div>
+                <div className="rg-field">
+                  <label>Password</label>
+                  <div className="rg-input-wrap">
+                    <Lock size={16} />
+                    <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="rg-field">
-              <label>Email</label>
-              <div className="rg-input-wrap">
-                <Mail size={16} />
-                <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <div className="rg-field">
+                <label>Email</label>
+                <div className="rg-input-wrap">
+                  <Mail size={16} />
+                  <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
               </div>
-            </div>
 
-            <div className="rg-field" style={{ marginBottom: 22 }}>
-              <label>Role</label>
-              <div className="rg-role-seg">
-                {roles.map(({ value, label, icon: Icon }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setRole(value)}
-                    className={`rg-role-btn ${role === value ? 'rg-active' : ''}`}
-                  >
-                    <Icon />
-                    <span>{label}</span>
-                  </button>
-                ))}
+              <div className="rg-field" style={{ marginBottom: 22 }}>
+                <label>Role</label>
+                <div className="rg-role-seg">
+                  {roles.map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setRole(value)}
+                      className={`rg-role-btn ${role === value ? 'rg-active' : ''}`}
+                    >
+                      <Icon />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              <button type="submit" className="rg-submit">
+                Register <ArrowRight size={16} strokeWidth={2.5} />
+              </button>
+            </form>
+
+            <div className="rg-login">
+              Already have an account? <Link to="/login">Login here</Link>
             </div>
-
-            <button type="submit" className="rg-submit">
-              Register <ArrowRight size={16} strokeWidth={2.5} />
-            </button>
-          </form>
-
-          <div className="rg-login">
-            Already have an account? <Link to="/login">Login here</Link>
           </div>
         </div>
       </div>

@@ -141,14 +141,29 @@ export default function Login() {
           --green: #146B5C; --green-d: #0F5548; --forest: #0B3F36;
           --amber: #E08E2B; --amber-d: #C9701B; --amber-text: #A65A0E;
           --ink: #14201B; --body: #43524B; --muted: #5F6F67;
-          --line: #E1E8E4; --bg: #F3F6F4;
+          --line: #E1E8E4; --bg: #EAEFEF;
           min-height: 100vh;
-          display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 20px;
           background: var(--bg);
           color: var(--ink);
           font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
           -webkit-font-smoothing: antialiased;
         }
+
+        .lg-card {
+          display: grid; 
+          grid-template-columns: 1fr 1fr;
+          max-width: 1080px;
+          width: 100%;
+          background: #FFFFFF;
+          border-radius: 28px;
+          overflow: hidden;
+          box-shadow: 0 24px 54px rgba(11, 63, 54, 0.08), 0 4px 14px rgba(11, 63, 54, 0.04);
+        }
+
         .lg-root *, .lg-root *::before, .lg-root *::after { box-sizing: border-box; }
         .lg-display { font-family: 'Sora', 'Inter', sans-serif; }
         .lg-root :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
@@ -156,7 +171,7 @@ export default function Login() {
         /* ---- Photo panel ---- */
         .lg-panel {
           position: relative; overflow: hidden; color: #FFFFFF; background: var(--forest);
-          padding: 44px 48px; min-height: 100vh;
+          padding: 44px 44px; min-height: 640px;
           display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
         }
         .lg-panel-img {
@@ -186,18 +201,18 @@ export default function Login() {
           padding: 7px 14px; border-radius: 999px;
         }
         .lg-chip i { width: 7px; height: 7px; border-radius: 50%; background: #F2B15A; }
-        .lg-copy h2 { margin: 0; max-width: 14ch; font-size: clamp(2rem, 3.8vw, 3.2rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.04; }
-        .lg-copy p { margin: 18px 0 0; max-width: 46ch; font-size: 16px; line-height: 1.7; color: rgba(255,255,255,0.84); }
+        .lg-copy h2 { margin: 0; max-width: 14ch; font-size: clamp(2rem, 3.8vw, 2.6rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.04; }
+        .lg-copy p { margin: 18px 0 0; max-width: 46ch; font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.84); }
 
-        .lg-glass-row { display: flex; flex-wrap: wrap; gap: 12px; }
+        .lg-glass-row { display: flex; flex-wrap: wrap; gap: 8px; }
         .lg-glass {
-          flex: 1 1 130px; padding: 14px 18px;
+          flex: 1 1 110px; padding: 12px 16px;
           background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.22);
-          backdrop-filter: blur(10px); border-radius: 16px;
+          backdrop-filter: blur(10px); border-radius: 14px;
         }
-        .lg-glass b { display: block; font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700; line-height: 1.15; }
-        .lg-glass small { display: block; margin-top: 4px; font-size: 12.5px; color: rgba(255,255,255,0.78); }
-        .lg-credit { margin: 0; font-size: 12px; color: rgba(255,255,255,0.6); }
+        .lg-glass b { display: block; font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.15; }
+        .lg-glass small { display: block; margin-top: 4px; font-size: 11px; color: rgba(255,255,255,0.78); }
+        .lg-credit { margin: 0; font-size: 11px; color: rgba(255,255,255,0.6); }
 
         /* ---- Mobile banner ---- */
         .lg-banner { display: none; position: relative; overflow: hidden; height: 170px; background: var(--forest); color: #FFFFFF; }
@@ -206,8 +221,8 @@ export default function Login() {
         .lg-banner .lg-brand { position: absolute; left: 20px; bottom: 18px; }
 
         /* ---- Form panel ---- */
-        .lg-form-wrap { display: flex; align-items: center; justify-content: center; padding: 48px 40px; }
-        .lg-form-inner { width: 100%; max-width: 420px; }
+        .lg-form-wrap { display: flex; align-items: center; justify-content: center; padding: 48px 40px; height: 100%; }
+        .lg-form-inner { width: 100%; max-width: 380px; }
         .lg-form-inner h2 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
         .lg-sub { margin: 10px 0 28px; font-size: 15px; line-height: 1.6; color: var(--body); }
 
@@ -263,10 +278,11 @@ export default function Login() {
         .lg-help { margin: 14px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
 
         @media (max-width: 900px) {
-          .lg-root { grid-template-columns: 1fr; }
+          .lg-root { padding: 0; align-items: flex-start; }
+          .lg-card { grid-template-columns: 1fr; border-radius: 0; box-shadow: none; min-height: 100vh; }
           .lg-panel { display: none; }
           .lg-banner { display: block; }
-          .lg-form-wrap { padding: 32px 20px 48px; align-items: flex-start; }
+          .lg-form-wrap { padding: 32px 20px 48px; align-items: flex-start; height: auto; min-height: calc(100vh - 170px); }
           .lg-form-inner h2 { font-size: 26px; }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -275,8 +291,9 @@ export default function Login() {
         }
       `}</style>
 
-      {/* Photo panel (desktop) */}
-      <aside className="lg-panel">
+      <div className="lg-card">
+        {/* Photo panel (desktop) */}
+        <aside className="lg-panel">
         <Photo id={LOGIN_PHOTO} w={1800} className="lg-panel-img" alt="A house with solar panels on the roof" />
         <div className="lg-shade" />
 
@@ -392,6 +409,7 @@ export default function Login() {
           </div>
         </div>
       </main>
+      </div>
     </div>
   );
 }
