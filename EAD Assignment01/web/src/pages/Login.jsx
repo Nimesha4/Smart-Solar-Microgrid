@@ -144,14 +144,47 @@ export default function Login() {
           --line: #E1E8E4; --bg: #EAEFEF;
           min-height: 100vh;
           display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 40px 20px;
+          flex-direction: column;
           background: var(--bg);
           color: var(--ink);
           font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
           -webkit-font-smoothing: antialiased;
         }
+        
+        .lg-main {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 20px;
+        }
+
+        /* ---- Nav ---- */
+        .lg-nav-shell {
+          position: sticky; top: 0; z-index: 40; width: 100%;
+          background: rgba(255,255,255,0.86); backdrop-filter: blur(10px);
+          border-bottom: 1px solid var(--line);
+        }
+        .lg-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 40px; width: 100%; }
+        .lg-nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+        .lg-nav-brand .lg-mark {
+          width: 38px; height: 38px; border-radius: 10px; flex: none;
+          background: linear-gradient(135deg, #E08E2B, #C9701B);
+          display: flex; align-items: center; justify-content: center;
+        }
+        .lg-nav-brand h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+        .lg-nav-brand span { display: block; margin-top: 1px; font-size: 12px; color: var(--muted); }
+        .lg-nav-actions { display: flex; align-items: center; gap: 10px; }
+        .lg-link-btn { font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; padding: 9px 16px; border-radius: 9px; }
+        .lg-link-btn:hover { background: #E8EEEA; }
+        .lg-btn-primary { background: var(--forest); color: #FFFFFF; font-size: 14px; font-weight: 600; text-decoration: none; padding: 9px 16px; border-radius: 9px; }
+        .lg-btn-primary:hover { background: var(--green); }
+
+        /* ---- Footer ---- */
+        .lg-footer { background: var(--bg); border-top: 1px solid var(--line); }
+        .lg-footer-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding: 28px 40px; width: 100%; }
+        .lg-footer p { margin: 0; font-size: 12.5px; color: var(--muted); }
+        .lg-footer-links { display: flex; gap: 6px; }
 
         .lg-card {
           display: grid; 
@@ -293,125 +326,157 @@ export default function Login() {
         }
       `}</style>
 
-      <div className="lg-card">
-        {/* Photo panel (desktop) */}
-        <aside className="lg-panel">
-        <Photo id={LOGIN_PHOTO} w={1800} className="lg-panel-img" alt="A house with solar panels on the roof" />
-        <div className="lg-shade" />
-
-        <Link to="/" className="lg-brand">
-          <div className="lg-mark"><Sun size={19} color="#FFFFFF" strokeWidth={2.25} /></div>
-          <div>
-            <h1 className="lg-display">Solar Microgrid</h1>
-            <span>Peer-to-peer energy trading</span>
-          </div>
-        </Link>
-
-        <div className="lg-copy">
-          
-          <h2 className="lg-display">Your surplus energy, put to work.</h2>
-          <p>Sign in to book a drop-off, monitor a hub, or manage the network — whichever seat you sit in.</p>
-        </div>
-
-        <div>
-          <div className="lg-glass-row">
-            <div className="lg-glass"><b>24/7</b><small>Online booking</small></div>
-            <div className="lg-glass"><b>QR</b><small>Secure handoff</small></div>
-            <div className="lg-glass"><b>kWh</b><small>Real-time tracking</small></div>
-          </div>
-          <p className="lg-credit" style={{ marginTop: 18 }}>Photography from Pexels</p>
-        </div>
-      </aside>
-
-      {/* Form panel */}
-      <main>
-        {/* Photo banner (mobile) */}
-        <div className="lg-banner">
-          <Photo id={LOGIN_PHOTO} w={900} className="lg-panel-img" alt="" />
-          <div className="lg-shade" />
-          <Link to="/" className="lg-brand">
+      {/* Nav */}
+      <div className="lg-nav-shell">
+        <nav className="lg-nav">
+          <Link to="/" className="lg-nav-brand">
             <div className="lg-mark"><Sun size={19} color="#FFFFFF" strokeWidth={2.25} /></div>
             <div>
-              <h1 className="lg-display">Solar Microgrid</h1>
+              <h2>Solar Microgrid</h2>
               <span>Peer-to-peer energy trading</span>
             </div>
           </Link>
-        </div>
-
-        <div className="lg-form-wrap">
-          <div className="lg-form-inner">
-            <h2 className="lg-display">Welcome back</h2>
-            <p className="lg-sub">Sign in with your NIC and password to continue.</p>
-
-            {error && (
-              <div className="lg-error" role="alert">
-                <AlertCircle size={16} />
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleLogin}>
-              <div className="lg-field">
-                <label htmlFor="lg-nic">NIC number</label>
-                <div className="lg-input-wrap">
-                  <IdCard size={17} />
-                  <input
-                    id="lg-nic"
-                    type="text"
-                    autoComplete="username"
-                    placeholder="e.g. 200015700123"
-                    value={nic}
-                    onChange={(e) => setNic(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="lg-field">
-                <label htmlFor="lg-pw">Password</label>
-                <div className="lg-input-wrap">
-                  <Lock size={17} />
-                  <input
-                    id="lg-pw"
-                    type={showPw ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button" className="lg-eye"
-                    aria-label={showPw ? 'Hide password' : 'Show password'}
-                    onClick={() => setShowPw(v => !v)}
-                  >
-                    {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
-                  </button>
-                </div>
-              </div>
-
-              <button type="submit" className="lg-submit">
-                Log in <ArrowRight size={16} strokeWidth={2.5} />
-              </button>
-            </form>
-
-            <div className="lg-register">
-              Don't have an account? <Link to="/register">Register here</Link>
-            </div>
-
-            <div className="lg-roles">
-              <p>One sign-in takes you to your own portal</p>
-              <div className="lg-role-row">
-                <span className="lg-role"><Sun size={14} />Prosumer</span>
-                <span className="lg-role"><Wrench size={14} />Grid operator</span>
-                <span className="lg-role"><ShieldCheck size={14} />Backoffice</span>
-              </div><br></br>
-              <p className="lg-help">Account deactivated? Ask Backoffice to reactivate it.</p>
-            </div>
+          <div className="lg-nav-actions">
+            <Link to="/" className="lg-link-btn">Home</Link>
+            <Link to="/login" className="lg-link-btn">Sign in</Link>
+            <Link to="/register" className="lg-btn-primary">Register</Link>
           </div>
+        </nav>
+      </div>
+
+      <main className="lg-main">
+        <div className="lg-card">
+          {/* Photo panel (desktop) */}
+          <aside className="lg-panel">
+            <Photo id={LOGIN_PHOTO} w={1800} className="lg-panel-img" alt="A house with solar panels on the roof" />
+            <div className="lg-shade" />
+
+            <Link to="/" className="lg-brand">
+              <div className="lg-mark"><Sun size={19} color="#FFFFFF" strokeWidth={2.25} /></div>
+              <div>
+                <h1 className="lg-display">Solar Microgrid</h1>
+                <span>Peer-to-peer energy trading</span>
+              </div>
+            </Link>
+
+            <div className="lg-copy">
+              <span className="lg-chip"><i />Live across grid hubs in Sri Lanka</span>
+              <h2 className="lg-display">Your surplus energy, put to work.</h2>
+              <p>Sign in to book a drop-off, monitor a hub, or manage the network — whichever seat you sit in.</p>
+            </div>
+
+            <div>
+              <div className="lg-glass-row">
+                <div className="lg-glass"><b>24/7</b><small>Online booking</small></div>
+                <div className="lg-glass"><b>QR</b><small>Secure handoff</small></div>
+                <div className="lg-glass"><b>kWh</b><small>Real-time tracking</small></div>
+              </div>
+              <p className="lg-credit" style={{ marginTop: 18 }}>Photography from Pexels</p>
+            </div>
+          </aside>
+
+          {/* Form panel */}
+          <section>
+            {/* Photo banner (mobile) */}
+            <div className="lg-banner">
+              <Photo id={LOGIN_PHOTO} w={900} className="lg-panel-img" alt="" />
+              <div className="lg-shade" />
+              <Link to="/" className="lg-brand">
+                <div className="lg-mark"><Sun size={19} color="#FFFFFF" strokeWidth={2.25} /></div>
+                <div>
+                  <h1 className="lg-display">Solar Microgrid</h1>
+                  <span>Peer-to-peer energy trading</span>
+                </div>
+              </Link>
+            </div>
+
+            <div className="lg-form-wrap">
+              <div className="lg-form-inner">
+                <h2 className="lg-display">Welcome back</h2>
+                <p className="lg-sub">Sign in with your NIC and password to continue.</p>
+
+                {error && (
+                  <div className="lg-error" role="alert">
+                    <AlertCircle size={16} />
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleLogin}>
+                  <div className="lg-field">
+                    <label htmlFor="lg-nic">NIC number</label>
+                    <div className="lg-input-wrap">
+                      <IdCard size={17} />
+                      <input
+                        id="lg-nic"
+                        type="text"
+                        autoComplete="username"
+                        placeholder="e.g. 200015700123"
+                        value={nic}
+                        onChange={(e) => setNic(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="lg-field">
+                    <label htmlFor="lg-pw">Password</label>
+                    <div className="lg-input-wrap">
+                      <Lock size={17} />
+                      <input
+                        id="lg-pw"
+                        type={showPw ? 'text' : 'password'}
+                        autoComplete="current-password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button" className="lg-eye"
+                        aria-label={showPw ? 'Hide password' : 'Show password'}
+                        onClick={() => setShowPw(v => !v)}
+                      >
+                        {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button type="submit" className="lg-submit">
+                    Log in <ArrowRight size={16} strokeWidth={2.5} />
+                  </button>
+                </form>
+
+                <div className="lg-register">
+                  Don't have an account? <Link to="/register">Register here</Link>
+                </div>
+
+                <div className="lg-roles">
+                  <p>One sign-in takes you to your own portal</p>
+                  <div className="lg-role-row">
+                    <span className="lg-role"><Sun size={14} />Prosumer</span>
+                    <span className="lg-role"><Wrench size={14} />Grid operator</span>
+                    <span className="lg-role"><ShieldCheck size={14} />Backoffice</span>
+                  </div>
+                  <p className="lg-help">Account deactivated? Ask Backoffice to reactivate it.</p>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
-      </div>
+
+      {/* Footer */}
+      <footer className="lg-footer">
+        <div className="lg-footer-in">
+          <p>Solar Microgrid Trading System</p>
+          <div className="lg-footer-links">
+            <Link to="/login" className="lg-link-btn">Sign in</Link>
+            <Link to="/register" className="lg-link-btn">Register</Link>
+          </div>
+          <p>&copy; 2026 Solar Microgrid. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -136,14 +136,47 @@ export default function Register() {
         .rg-root {
           min-height: 100vh;
           display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 40px 20px;
+          flex-direction: column;
           background: #EAEFEF;
           color: #1B2420;
           font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
           -webkit-font-smoothing: antialiased;
         }
+
+        .rg-main {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 20px;
+        }
+
+        /* ---- Nav ---- */
+        .rg-nav-shell {
+          position: sticky; top: 0; z-index: 40; width: 100%;
+          background: rgba(255,255,255,0.86); backdrop-filter: blur(10px);
+          border-bottom: 1px solid #E1E8E4;
+        }
+        .rg-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 40px; width: 100%; }
+        .rg-nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #14201B; }
+        .rg-nav-brand .rg-mark {
+          width: 38px; height: 38px; border-radius: 10px; flex: none;
+          background: linear-gradient(135deg, #E08E2B, #C9701B);
+          display: flex; align-items: center; justify-content: center;
+        }
+        .rg-nav-brand h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+        .rg-nav-brand span { display: block; margin-top: 1px; font-size: 12px; color: #5F6F67; }
+        .rg-nav-actions { display: flex; align-items: center; gap: 10px; }
+        .rg-link-btn { font-size: 14px; font-weight: 600; color: #14201B; text-decoration: none; padding: 9px 16px; border-radius: 9px; }
+        .rg-link-btn:hover { background: #E8EEEA; }
+        .rg-btn-primary { background: #0B3F36; color: #FFFFFF; font-size: 14px; font-weight: 600; text-decoration: none; padding: 9px 16px; border-radius: 9px; }
+        .rg-btn-primary:hover { background: #146B5C; }
+
+        /* ---- Footer ---- */
+        .rg-footer { background: #EAEFEF; border-top: 1px solid #E1E8E4; }
+        .rg-footer-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding: 28px 40px; width: 100%; }
+        .rg-footer p { margin: 0; font-size: 12.5px; color: #5F6F67; }
+        .rg-footer-links { display: flex; gap: 6px; }
 
         .rg-card {
           display: grid; 
@@ -276,123 +309,155 @@ export default function Register() {
         @media (prefers-reduced-motion: reduce) { .rg-root * { transition: none !important; } }
       `}</style>
 
-      <div className="rg-card">
-        {/* Left brand panel */}
-        <div className="rg-panel">
-          <Photo id={LOGIN_PHOTO} w={1800} className="rg-panel-img" alt="A house with solar panels on the roof" />
-          <div className="rg-shade" />
-          
-          <Link to="/" className="rg-brand">
-            <div className="rg-mark"><Sun size={18} color="#FFFFFF" strokeWidth={2.25} /></div>
+      {/* Nav */}
+      <div className="rg-nav-shell">
+        <nav className="rg-nav">
+          <Link to="/" className="rg-nav-brand">
+            <div className="rg-mark"><Sun size={19} color="#FFFFFF" strokeWidth={2.25} /></div>
             <div>
-              <h1 className="rg-display">Solar Microgrid</h1>
+              <h2>Solar Microgrid</h2>
               <span>Peer-to-peer energy trading</span>
             </div>
           </Link>
-
-          <div className="rg-panel-copy">
-            <h2 className="rg-display">One account, three ways to take part.</h2>
-            <p>Tell us which seat you'll sit in — you can trade energy, run a hub, or manage the network.</p>
+          <div className="rg-nav-actions">
+            <Link to="/" className="rg-link-btn">Home</Link>
+            <Link to="/login" className="rg-link-btn">Sign in</Link>
+            <Link to="/register" className="rg-btn-primary">Register</Link>
           </div>
-
-          <div className="rg-role-list">
-            <div>
-              <div className="rg-role-icon"><Zap size={16} /></div>
-              <div>
-                <b>Prosumer</b>
-                <span>Book drop-offs and trade surplus solar energy</span>
-              </div>
-            </div>
-            <div>
-              <div className="rg-role-icon"><Wrench size={16} /></div>
-              <div>
-                <b>Grid operator</b>
-                <span>Monitor battery slots and confirm handoffs on-site</span>
-              </div>
-            </div>
-            <div>
-              <div className="rg-role-icon"><ShieldCheck size={16} /></div>
-              <div>
-                <b>Backoffice</b>
-                <span>Register hubs and manage accounts network-wide</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right form panel */}
-        <div className="rg-form-wrap">
-          <div className="rg-form-inner">
-            <div className="rg-mobile-brand">
-              <div className="rg-mark"><Sun size={15} color="#FFFFFF" strokeWidth={2.25} /></div>
-              <h1 className="rg-display">Solar Microgrid</h1>
-            </div>
-
-            <h2 className="rg-display">Create your account</h2>
-            <p className="rg-sub">Register in a minute, then sign in to your portal.</p>
-
-            {error && (
-              <div className="rg-error">
-                <AlertCircle size={16} />
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleRegister}>
-              <div className="rg-field">
-                <label>Full name</label>
-                <div className="rg-input-wrap">
-                  <User size={16} />
-                  <input type="text" placeholder="Jane Perera" value={name} onChange={(e) => setName(e.target.value)} required />
-                </div>
-              </div>
-
-              <div className="rg-row2">
-                <div className="rg-field">
-                  <label>NIC number</label>
-                  <div className="rg-input-wrap">
-                    <IdCard size={16} />
-                    <input type="text" placeholder="200015700123" value={nic} onChange={(e) => setNic(e.target.value)} required />
-                  </div>
-                </div>
-                <div className="rg-field">
-                  <label>Password</label>
-                  <div className="rg-input-wrap">
-                    <Lock size={16} />
-                    <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rg-field">
-                <label>Email</label>
-                <div className="rg-input-wrap">
-                  <Mail size={16} />
-                  <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                </div>
-              </div>
-
-              <div className="rg-field" style={{ marginBottom: 24 }}>
-                <label>Account type</label>
-                <div className="rg-role-seg" style={{ gridTemplateColumns: '1fr' }}>
-                  <div className="rg-role-btn rg-active" style={{ cursor: 'default', flexDirection: 'row', justifyContent: 'center', gap: '8px', padding: '14px' }}>
-                    <Zap size={18} />
-                    <span style={{ fontSize: '13.5px' }}>Prosumer</span>
-                  </div>
-                </div>
-              </div>
-
-              <button type="submit" className="rg-submit">
-                Register <ArrowRight size={16} strokeWidth={2.5} />
-              </button>
-            </form>
-
-            <div className="rg-login">
-              Already have an account? <Link to="/login">Login here</Link>
-            </div>
-          </div>
-        </div>
+        </nav>
       </div>
+
+      <main className="rg-main">
+        <div className="rg-card">
+          {/* Left brand panel */}
+          <div className="rg-panel">
+            <Photo id={LOGIN_PHOTO} w={1800} className="rg-panel-img" alt="A house with solar panels on the roof" />
+            <div className="rg-shade" />
+            
+            <Link to="/" className="rg-brand">
+              <div className="rg-mark"><Sun size={18} color="#FFFFFF" strokeWidth={2.25} /></div>
+              <div>
+                <h1 className="rg-display">Solar Microgrid</h1>
+                <span>Peer-to-peer energy trading</span>
+              </div>
+            </Link>
+
+            <div className="rg-panel-copy">
+              <h2 className="rg-display">One account, three ways to take part.</h2>
+              <p>Tell us which seat you'll sit in — you can trade energy, run a hub, or manage the network.</p>
+            </div>
+
+            <div className="rg-role-list">
+              <div>
+                <div className="rg-role-icon"><Zap size={16} /></div>
+                <div>
+                  <b>Prosumer</b>
+                  <span>Book drop-offs and trade surplus solar energy</span>
+                </div>
+              </div>
+              <div>
+                <div className="rg-role-icon"><Wrench size={16} /></div>
+                <div>
+                  <b>Grid operator</b>
+                  <span>Monitor battery slots and confirm handoffs on-site</span>
+                </div>
+              </div>
+              <div>
+                <div className="rg-role-icon"><ShieldCheck size={16} /></div>
+                <div>
+                  <b>Backoffice</b>
+                  <span>Register hubs and manage accounts network-wide</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right form panel */}
+          <div className="rg-form-wrap">
+            <div className="rg-form-inner">
+              <div className="rg-mobile-brand">
+                <div className="rg-mark"><Sun size={15} color="#FFFFFF" strokeWidth={2.25} /></div>
+                <h1 className="rg-display">Solar Microgrid</h1>
+              </div>
+
+              <h2 className="rg-display">Create your account</h2>
+              <p className="rg-sub">Register in a minute, then sign in to your portal.</p>
+
+              {error && (
+                <div className="rg-error">
+                  <AlertCircle size={16} />
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleRegister}>
+                <div className="rg-field">
+                  <label>Full name</label>
+                  <div className="rg-input-wrap">
+                    <User size={16} />
+                    <input type="text" placeholder="Jane Perera" value={name} onChange={(e) => setName(e.target.value)} required />
+                  </div>
+                </div>
+
+                <div className="rg-row2">
+                  <div className="rg-field">
+                    <label>NIC number</label>
+                    <div className="rg-input-wrap">
+                      <IdCard size={16} />
+                      <input type="text" placeholder="200015700123" value={nic} onChange={(e) => setNic(e.target.value)} required />
+                    </div>
+                  </div>
+                  <div className="rg-field">
+                    <label>Password</label>
+                    <div className="rg-input-wrap">
+                      <Lock size={16} />
+                      <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rg-field">
+                  <label>Email</label>
+                  <div className="rg-input-wrap">
+                    <Mail size={16} />
+                    <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  </div>
+                </div>
+
+                <div className="rg-field" style={{ marginBottom: 24 }}>
+                  <label>Account type</label>
+                  <div className="rg-role-seg" style={{ gridTemplateColumns: '1fr' }}>
+                    <div className="rg-role-btn rg-active" style={{ cursor: 'default', flexDirection: 'row', justifyContent: 'center', gap: '8px', padding: '14px' }}>
+                      <Zap size={18} />
+                      <span style={{ fontSize: '13.5px' }}>Prosumer</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" className="rg-submit">
+                  Register <ArrowRight size={16} strokeWidth={2.5} />
+                </button>
+              </form>
+
+              <div className="rg-login">
+                Already have an account? <Link to="/login">Login here</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="rg-footer">
+        <div className="rg-footer-in">
+          <p>Solar Microgrid Trading System</p>
+          <div className="rg-footer-links">
+            <Link to="/login" className="rg-link-btn">Sign in</Link>
+            <Link to="/register" className="rg-link-btn">Register</Link>
+          </div>
+          <p>&copy; 2026 Solar Microgrid. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 }

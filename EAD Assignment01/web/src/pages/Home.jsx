@@ -754,12 +754,12 @@ export default function Home() {
       {/* Footer */}
       <footer className="sm-footer">
         <div className="sm-footer-in">
-          <p>Enterprise Application Development (SE4040) — Assignment 1</p>
+          <p>Solar Microgrid Trading System</p>
           <div className="sm-footer-links">
             <Link to="/login" className="sm-link-btn">Sign in</Link>
             <Link to="/register" className="sm-link-btn">Register</Link>
           </div>
-          <p>Photography from Pexels</p>
+          <p>&copy; 2026 Solar Microgrid. All rights reserved.</p>
         </div>
       </footer>
     </div>
