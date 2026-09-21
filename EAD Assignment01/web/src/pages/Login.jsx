@@ -1,12 +1,107 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Sun, IdCard, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import {
+  Sun, IdCard, Lock, ArrowRight, AlertCircle, Eye, EyeOff, Wrench, ShieldCheck,
+} from 'lucide-react';
+
+/* ------------------------------------------------------------------ */
+/*  Photos: your own copy -> Pexels -> drawn solar artwork.           */
+/*  Save your own photos as /public/solar/<id>.jpg if Pexels is       */
+/*  blocked on your network. Set LOCAL_DIR to '' to skip that step.   */
+/* ------------------------------------------------------------------ */
+const LOCAL_DIR = '/solar';
+const LOGIN_PHOTO = 12243093; // house with rooftop solar panels
+
+const photoSources = (id, w) => [
+  ...(LOCAL_DIR ? [`${LOCAL_DIR}/${id}.jpg`] : []),
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`,
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg`,
+];
+
+function SolarArt({ className = '' }) {
+  const rows = 7;
+  const yAt = i => 430 + 470 * Math.pow(i / rows, 1.5);
+  const half = y => 560 + (y - 430) * 3.4;
+  const items = [];
+  for (let i = 0; i < rows; i++) {
+    const y1 = yAt(i);
+    const y2 = yAt(i + 1) - (3 + i * 2.5);
+    const h1 = half(y1), h2 = half(y2);
+    const pts = `${800 - h1},${y1} ${800 + h1},${y1} ${800 + h2},${y2} ${800 - h2},${y2}`;
+    const cols = [];
+    for (let k = -8; k <= 8; k++) {
+      cols.push(<line key={k} x1={800 + (k * h1) / 8} y1={y1} x2={800 + (k * h2) / 8} y2={y2} stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />);
+    }
+    items.push(
+      <g key={i}>
+        <polygon points={pts} fill="url(#lgArtPanel)" />
+        {cols}
+        <line x1={800 - (h1 + h2) / 2} y1={(y1 + y2) / 2} x2={800 + (h1 + h2) / 2} y2={(y1 + y2) / 2} stroke="rgba(255,255,255,0.14)" strokeWidth="1.5" />
+        <polygon points={pts} fill="url(#lgArtSheen)" />
+      </g>
+    );
+  }
+  return (
+    <svg className={className} viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgArtSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0B3F36" />
+          <stop offset="55%" stopColor="#1F7A69" />
+          <stop offset="100%" stopColor="#F2B15A" />
+        </linearGradient>
+        <radialGradient id="lgArtSun" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor="#FFE7B5" stopOpacity="1" />
+          <stop offset="30%" stopColor="#F7C57A" stopOpacity="0.75" />
+          <stop offset="100%" stopColor="#E08E2B" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="lgArtGround" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#12493E" />
+          <stop offset="100%" stopColor="#071F1A" />
+        </linearGradient>
+        <linearGradient id="lgArtPanel" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#1A4F7A" />
+          <stop offset="100%" stopColor="#0A2140" />
+        </linearGradient>
+        <linearGradient id="lgArtSheen" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+          <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <rect width="1600" height="430" fill="url(#lgArtSky)" />
+      <circle cx="1120" cy="330" r="340" fill="url(#lgArtSun)" />
+      <circle cx="1120" cy="330" r="48" fill="#FFF1D2" />
+      <rect y="420" width="1600" height="480" fill="url(#lgArtGround)" />
+      {items}
+    </svg>
+  );
+}
+
+function Photo({ id, w = 1600, alt = '', className = '' }) {
+  const list = photoSources(id, w);
+  const [i, setI] = useState(0);
+  if (i >= list.length) return <SolarArt className={className} />;
+  return (
+    <img
+      key={list[i]}
+      className={className}
+      src={list[i]}
+      alt={alt}
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={() => setI(n => n + 1)}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
 
 export default function Login() {
   const [nic, setNic] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPw, setShowPw] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -43,189 +138,260 @@ export default function Login() {
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
         .lg-root {
+          --green: #146B5C; --green-d: #0F5548; --forest: #0B3F36;
+          --amber: #E08E2B; --amber-d: #C9701B; --amber-text: #A65A0E;
+          --ink: #14201B; --body: #43524B; --muted: #5F6F67;
+          --line: #E1E8E4; --bg: #F3F6F4;
           min-height: 100vh;
-          display: grid; grid-template-columns: 1fr 1fr;
-          background: #FBFAF7;
-          color: #1B2420;
+          display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+          background: var(--bg);
+          color: var(--ink);
           font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
           -webkit-font-smoothing: antialiased;
         }
         .lg-root *, .lg-root *::before, .lg-root *::after { box-sizing: border-box; }
         .lg-display { font-family: 'Sora', 'Inter', sans-serif; }
+        .lg-root :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
-        /* ---- Left brand panel ---- */
+        /* ---- Photo panel ---- */
         .lg-panel {
-          position: relative; overflow: hidden;
-          background: linear-gradient(165deg, #146B5C 0%, #0F5548 70%, #0B4239 100%);
-          color: #FFFFFF;
-          padding: 48px;
-          display: flex; flex-direction: column; justify-content: space-between;
+          position: relative; overflow: hidden; color: #FFFFFF; background: var(--forest);
+          padding: 44px 48px; min-height: 100vh;
+          display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
         }
-        .lg-panel::before {
-          content: ''; position: absolute; inset: 0;
-          background:
-            radial-gradient(380px 380px at 85% -8%, rgba(224,142,43,0.28), transparent 65%),
-            radial-gradient(260px 260px at 100% 100%, rgba(255,255,255,0.08), transparent 60%);
-          pointer-events: none;
+        .lg-panel-img {
+          position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+          animation: lg-settle 2.2s cubic-bezier(.2,.7,.2,1) both;
         }
-        .lg-brand { position: relative; display: flex; align-items: center; gap: 12px; }
+        @keyframes lg-settle { from { transform: scale(1.08); } to { transform: scale(1); } }
+        .lg-shade {
+          position: absolute; inset: 0;
+          background: linear-gradient(180deg, rgba(8,42,36,0.78) 0%, rgba(8,42,36,0.38) 38%, rgba(8,42,36,0.94) 100%);
+        }
+        .lg-panel > *:not(.lg-panel-img):not(.lg-shade) { position: relative; }
+
+        .lg-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #FFFFFF; }
         .lg-mark {
-          width: 36px; height: 36px; border-radius: 10px; flex: none;
+          width: 38px; height: 38px; border-radius: 10px; flex: none;
           background: linear-gradient(135deg, #E08E2B, #C9701B);
           display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 6px 16px rgba(0,0,0,0.2);
         }
-        .lg-brand h1 { margin: 0; font-size: 15px; font-weight: 700; }
-        .lg-brand span { font-size: 12.5px; color: rgba(255,255,255,0.7); }
+        .lg-brand h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+        .lg-brand span { display: block; margin-top: 1px; font-size: 12.5px; color: rgba(255,255,255,0.78); }
 
-        .lg-panel-copy { position: relative; max-width: 380px; }
-        .lg-panel-copy h2 {
-          margin: 0; font-size: clamp(28px, 3.4vw, 38px); font-weight: 700;
-          letter-spacing: -0.03em; line-height: 1.1;
+        .lg-chip {
+          display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px;
+          font-size: 13px; font-weight: 600;
+          background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28); backdrop-filter: blur(8px);
+          padding: 7px 14px; border-radius: 999px;
         }
-        .lg-panel-copy p { margin: 16px 0 0; font-size: 15px; line-height: 1.65; color: rgba(255,255,255,0.75); }
+        .lg-chip i { width: 7px; height: 7px; border-radius: 50%; background: #F2B15A; }
+        .lg-copy h2 { margin: 0; max-width: 14ch; font-size: clamp(2rem, 3.8vw, 3.2rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.04; }
+        .lg-copy p { margin: 18px 0 0; max-width: 46ch; font-size: 16px; line-height: 1.7; color: rgba(255,255,255,0.84); }
 
-        .lg-stats { position: relative; display: flex; gap: 36px; }
-        .lg-stats div b {
-          display: block; font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700;
-          color: #F4C98A;
+        .lg-glass-row { display: flex; flex-wrap: wrap; gap: 12px; }
+        .lg-glass {
+          flex: 1 1 130px; padding: 14px 18px;
+          background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.22);
+          backdrop-filter: blur(10px); border-radius: 16px;
         }
-        .lg-stats div span { display: block; margin-top: 4px; font-size: 12.5px; color: rgba(255,255,255,0.65); }
+        .lg-glass b { display: block; font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700; line-height: 1.15; }
+        .lg-glass small { display: block; margin-top: 4px; font-size: 12.5px; color: rgba(255,255,255,0.78); }
+        .lg-credit { margin: 0; font-size: 12px; color: rgba(255,255,255,0.6); }
 
-        /* ---- Right form panel ---- */
-        .lg-form-wrap {
-          display: flex; align-items: center; justify-content: center; padding: 40px;
-        }
-        .lg-form-inner { width: 100%; max-width: 380px; }
+        /* ---- Mobile banner ---- */
+        .lg-banner { display: none; position: relative; overflow: hidden; height: 170px; background: var(--forest); color: #FFFFFF; }
+        .lg-banner .lg-panel-img { animation: none; }
+        .lg-banner .lg-shade { background: linear-gradient(180deg, rgba(8,42,36,0.55), rgba(8,42,36,0.9)); }
+        .lg-banner .lg-brand { position: absolute; left: 20px; bottom: 18px; }
 
-        .lg-mobile-brand { display: none; align-items: center; gap: 10px; margin-bottom: 28px; }
-        .lg-mobile-brand .lg-mark { width: 30px; height: 30px; border-radius: 8px; }
-        .lg-mobile-brand h1 { margin: 0; font-size: 14px; font-weight: 700; }
-
-        .lg-form-inner h2 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
-        .lg-form-inner > p.lg-sub { margin: 8px 0 28px; font-size: 14px; color: #5B6B63; }
+        /* ---- Form panel ---- */
+        .lg-form-wrap { display: flex; align-items: center; justify-content: center; padding: 48px 40px; }
+        .lg-form-inner { width: 100%; max-width: 420px; }
+        .lg-form-inner h2 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+        .lg-sub { margin: 10px 0 28px; font-size: 15px; line-height: 1.6; color: var(--body); }
 
         .lg-error {
-          display: flex; align-items: center; gap: 8px;
-          background: rgba(201,112,27,0.08); border: 1px solid rgba(201,112,27,0.28);
-          color: #A85A15; font-size: 13.5px; padding: 11px 13px; border-radius: 9px; margin-bottom: 20px;
+          display: flex; align-items: flex-start; gap: 10px;
+          background: rgba(224,142,43,0.12); border: 1px solid rgba(201,112,27,0.35);
+          color: var(--amber-text); font-size: 13.5px; font-weight: 600; line-height: 1.45;
+          padding: 12px 14px; border-radius: 12px; margin-bottom: 20px;
         }
+        .lg-error svg { flex: none; margin-top: 1px; }
 
         .lg-field { margin-bottom: 18px; }
-        .lg-field label { display: block; font-size: 13px; font-weight: 600; color: #33413A; margin-bottom: 7px; }
+        .lg-field label { display: block; font-size: 13px; font-weight: 600; color: var(--body); margin-bottom: 7px; }
         .lg-input-wrap { position: relative; display: flex; align-items: center; }
-        .lg-input-wrap svg { position: absolute; left: 13px; color: #8A968F; pointer-events: none; }
+        .lg-input-wrap > svg { position: absolute; left: 14px; color: var(--muted); pointer-events: none; }
         .lg-input-wrap input {
-          width: 100%; font: inherit; font-size: 14.5px; color: #1B2420;
-          background: #FFFFFF; border: 1px solid #DEDCD3; border-radius: 10px;
-          padding: 12px 13px 12px 40px;
+          width: 100%; font: inherit; font-size: 15px; color: var(--ink);
+          background: #FFFFFF; border: 1px solid #D6DED9; border-radius: 12px;
+          padding: 13px 44px 13px 42px;
           transition: border-color .12s ease, box-shadow .12s ease;
         }
-        .lg-input-wrap input::placeholder { color: #9AA6A0; }
-        .lg-input-wrap input:focus { outline: none; border-color: #146B5C; box-shadow: 0 0 0 3px rgba(20,107,92,0.12); }
+        .lg-input-wrap input::placeholder { color: #8B9892; }
+        .lg-input-wrap input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(20,107,92,0.16); }
+        .lg-eye {
+          position: absolute; right: 6px; width: 36px; height: 36px; border-radius: 9px; border: none; background: transparent;
+          color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+          transition: background-color .12s ease, color .12s ease;
+        }
+        .lg-eye:hover { background: #EEF2EF; color: var(--ink); }
 
         .lg-submit {
           width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-          background: #146B5C; color: #FFFFFF; border: none; cursor: pointer;
-          padding: 13px 0; border-radius: 10px; font-size: 14.5px; font-weight: 700;
-          margin-top: 6px; margin-bottom: 22px;
+          background: var(--forest); color: #FFFFFF; border: none; cursor: pointer;
+          padding: 14px 0; border-radius: 12px; font: inherit; font-size: 15px; font-weight: 700;
+          margin-top: 6px; box-shadow: 0 10px 24px rgba(11,63,54,0.22);
           transition: background-color .12s ease, transform .1s ease;
         }
-        .lg-submit:hover { background: #0F5548; }
+        .lg-submit:hover { background: var(--green); }
         .lg-submit:active { transform: translateY(1px); }
 
-        .lg-register { text-align: center; font-size: 13.5px; color: #5B6B63; }
-        .lg-register a { color: #146B5C; font-weight: 600; text-decoration: none; }
+        .lg-register { margin-top: 22px; text-align: center; font-size: 14px; color: var(--body); }
+        .lg-register a { color: var(--green); font-weight: 700; text-decoration: none; }
         .lg-register a:hover { text-decoration: underline; }
+
+        .lg-roles { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+        .lg-roles p { margin: 0 0 14px; font-size: 13px; font-weight: 600; color: var(--body); }
+        .lg-role-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .lg-role {
+          display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px;
+          background: #FFFFFF; border: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--body);
+        }
+        .lg-role svg { color: var(--green); }
+        .lg-help { margin: 14px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
 
         @media (max-width: 900px) {
           .lg-root { grid-template-columns: 1fr; }
           .lg-panel { display: none; }
-          .lg-mobile-brand { display: flex; }
-          .lg-form-wrap { padding: 32px 20px; }
+          .lg-banner { display: block; }
+          .lg-form-wrap { padding: 32px 20px 48px; align-items: flex-start; }
+          .lg-form-inner h2 { font-size: 26px; }
         }
-        @media (prefers-reduced-motion: reduce) { .lg-root * { transition: none !important; } }
+        @media (prefers-reduced-motion: reduce) {
+          .lg-root * { transition: none !important; }
+          .lg-panel-img { animation: none; }
+        }
       `}</style>
 
-      {/* Left brand panel */}
-      <div className="lg-panel">
-        <div className="lg-brand">
-          <div className="lg-mark"><Sun size={18} color="#FFFFFF" strokeWidth={2.25} /></div>
+      {/* Photo panel (desktop) */}
+      <aside className="lg-panel">
+        <Photo id={LOGIN_PHOTO} w={1800} className="lg-panel-img" alt="A house with solar panels on the roof" />
+        <div className="lg-shade" />
+
+        <Link to="/" className="lg-brand">
+          <div className="lg-mark"><Sun size={19} color="#FFFFFF" strokeWidth={2.25} /></div>
           <div>
             <h1 className="lg-display">Solar Microgrid</h1>
             <span>Peer-to-peer energy trading</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="lg-panel-copy">
+        <div className="lg-copy">
+          <span className="lg-chip"><i />Live across grid hubs in Sri Lanka</span>
           <h2 className="lg-display">Your surplus energy, put to work.</h2>
           <p>Sign in to book a drop-off, monitor a hub, or manage the network — whichever seat you sit in.</p>
         </div>
 
-        <div className="lg-stats">
-          <div><b>24/7</b><span>Hub availability</span></div>
-          <div><b>QR</b><span>Secure handoff</span></div>
-          <div><b>kWh</b><span>Real-time tracking</span></div>
-        </div>
-      </div>
-
-      {/* Right form panel */}
-      <div className="lg-form-wrap">
-        <div className="lg-form-inner">
-          <div className="lg-mobile-brand">
-            <div className="lg-mark"><Sun size={15} color="#FFFFFF" strokeWidth={2.25} /></div>
-            <h1 className="lg-display">Solar Microgrid</h1>
+        <div>
+          <div className="lg-glass-row">
+            <div className="lg-glass"><b>24/7</b><small>Online booking</small></div>
+            <div className="lg-glass"><b>QR</b><small>Secure handoff</small></div>
+            <div className="lg-glass"><b>kWh</b><small>Real-time tracking</small></div>
           </div>
+          <p className="lg-credit" style={{ marginTop: 18 }}>Photography from Pexels</p>
+        </div>
+      </aside>
 
-          <h2 className="lg-display">Welcome back</h2>
-          <p className="lg-sub">Sign in with your NIC and password to continue.</p>
-
-          {error && (
-            <div className="lg-error">
-              <AlertCircle size={16} />
-              {error}
+      {/* Form panel */}
+      <main>
+        {/* Photo banner (mobile) */}
+        <div className="lg-banner">
+          <Photo id={LOGIN_PHOTO} w={900} className="lg-panel-img" alt="" />
+          <div className="lg-shade" />
+          <Link to="/" className="lg-brand">
+            <div className="lg-mark"><Sun size={19} color="#FFFFFF" strokeWidth={2.25} /></div>
+            <div>
+              <h1 className="lg-display">Solar Microgrid</h1>
+              <span>Peer-to-peer energy trading</span>
             </div>
-          )}
+          </Link>
+        </div>
 
-          <form onSubmit={handleLogin}>
-            <div className="lg-field">
-              <label>NIC number</label>
-              <div className="lg-input-wrap">
-                <IdCard size={16} />
-                <input
-                  type="text"
-                  placeholder="e.g. 200015700123"
-                  value={nic}
-                  onChange={(e) => setNic(e.target.value)}
-                  required
-                />
+        <div className="lg-form-wrap">
+          <div className="lg-form-inner">
+            <h2 className="lg-display">Welcome back</h2>
+            <p className="lg-sub">Sign in with your NIC and password to continue.</p>
+
+            {error && (
+              <div className="lg-error" role="alert">
+                <AlertCircle size={16} />
+                {error}
               </div>
-            </div>
+            )}
 
-            <div className="lg-field">
-              <label>Password</label>
-              <div className="lg-input-wrap">
-                <Lock size={16} />
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+            <form onSubmit={handleLogin}>
+              <div className="lg-field">
+                <label htmlFor="lg-nic">NIC number</label>
+                <div className="lg-input-wrap">
+                  <IdCard size={17} />
+                  <input
+                    id="lg-nic"
+                    type="text"
+                    autoComplete="username"
+                    placeholder="e.g. 200015700123"
+                    value={nic}
+                    onChange={(e) => setNic(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
+
+              <div className="lg-field">
+                <label htmlFor="lg-pw">Password</label>
+                <div className="lg-input-wrap">
+                  <Lock size={17} />
+                  <input
+                    id="lg-pw"
+                    type={showPw ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button" className="lg-eye"
+                    aria-label={showPw ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowPw(v => !v)}
+                  >
+                    {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="lg-submit">
+                Log in <ArrowRight size={16} strokeWidth={2.5} />
+              </button>
+            </form>
+
+            <div className="lg-register">
+              Don't have an account? <Link to="/register">Register here</Link>
             </div>
 
-            <button type="submit" className="lg-submit">
-              Log in <ArrowRight size={16} strokeWidth={2.5} />
-            </button>
-          </form>
-
-          <div className="lg-register">
-            Don't have an account? <Link to="/register">Register here</Link>
+            <div className="lg-roles">
+              <p>One sign-in takes you to your own portal</p>
+              <div className="lg-role-row">
+                <span className="lg-role"><Sun size={14} />Prosumer</span>
+                <span className="lg-role"><Wrench size={14} />Grid operator</span>
+                <span className="lg-role"><ShieldCheck size={14} />Backoffice</span>
+              </div>
+              <p className="lg-help">Account deactivated? Ask Backoffice to reactivate it.</p>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
