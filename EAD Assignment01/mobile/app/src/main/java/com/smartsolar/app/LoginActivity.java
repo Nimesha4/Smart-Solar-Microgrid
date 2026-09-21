@@ -29,17 +29,21 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // Mock Layout setup (assuming standard linear layout in XML)
-        // setContentView(R.layout.activity_login);
-        // editNic = findViewById(R.id.editNic);
-        // btnLogin = findViewById(R.id.btnLogin);
+        setContentView(R.layout.activity_login);
+        editNic = findViewById(R.id.editNic);
+        EditText editPassword = findViewById(R.id.editPassword);
+        btnLogin = findViewById(R.id.btnLogin);
+        android.widget.TextView tvRegister = findViewById(R.id.tvRegister);
 
-        // btnLogin.setOnClickListener(v -> attemptLogin(editNic.getText().toString().trim()));
+        btnLogin.setOnClickListener(v -> attemptLogin(editNic.getText().toString().trim(), editPassword.getText().toString()));
+        tvRegister.setOnClickListener(v -> {
+            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
+        });
     }
 
-    private void attemptLogin(String nic) {
-        if (nic.isEmpty()) {
-            Toast.makeText(this, "NIC is required", Toast.LENGTH_SHORT).show();
+    private void attemptLogin(String nic, String password) {
+        if (nic.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "NIC and password are required", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -52,6 +56,11 @@ public class LoginActivity extends AppCompatActivity {
                     
                     if (!user.isActive) {
                         Toast.makeText(LoginActivity.this, "Account deactivated", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    
+                    if (!password.equals(user.passwordHash)) {
+                        Toast.makeText(LoginActivity.this, "Incorrect password", Toast.LENGTH_LONG).show();
                         return;
                     }
                     

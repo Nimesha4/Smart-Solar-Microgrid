@@ -18,15 +18,17 @@ public class RegisterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // setContentView(R.layout.activity_register);
+        setContentView(R.layout.activity_register);
 
-        // editNic = findViewById(R.id.editNic);
-        // editName = findViewById(R.id.editName);
-        // editEmail = findViewById(R.id.editEmail);
-        // editPassword = findViewById(R.id.editPassword);
-        // btnRegister = findViewById(R.id.btnRegister);
+        editNic = findViewById(R.id.editNic);
+        editName = findViewById(R.id.editName);
+        editEmail = findViewById(R.id.editEmail);
+        editPassword = findViewById(R.id.editPassword);
+        btnRegister = findViewById(R.id.btnRegister);
+        android.widget.TextView tvLogin = findViewById(R.id.tvLogin);
 
-        // btnRegister.setOnClickListener(v -> attemptRegister());
+        btnRegister.setOnClickListener(v -> attemptRegister());
+        tvLogin.setOnClickListener(v -> finish());
     }
 
     private void attemptRegister() {
