@@ -675,9 +675,7 @@ export default function ProsumerDashboard() {
         </div>
 
         <div className="pr-user">
-          <div className="pr-avatar" style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{initials}</div>
-          <span style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{user?.name}</span>
-          <HeaderMenu />
+          <HeaderMenu onProfileClick={() => setShowProfile(true)} />
         </div>
       </div>
 

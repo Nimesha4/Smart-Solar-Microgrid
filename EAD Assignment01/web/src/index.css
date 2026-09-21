@@ -85,16 +85,4 @@
 .hm-danger { color: #E11D48; }
 .hm-danger:hover { background: #FFF1F2; color: #BE123C; }
 
-/* ---- Basic Dark Mode Filter ---- */
-html.dark {
-  filter: invert(1) hue-rotate(180deg);
-}
-/* Revert images, SVGs, and hero backgrounds so they don't look weird */
-html.dark img, 
-html.dark svg, 
-html.dark .pr-hero, 
-html.dark .go-hero, 
-html.dark .bo-hero,
-html.dark .lg-art {
-  filter: invert(1) hue-rotate(180deg);
-}
+

@@ -602,9 +602,7 @@ export default function GridOperatorDashboard() {
         </div>
 
         <div className="go-user">
-          <div className="go-avatar" style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{initials}</div>
-          <span style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{user?.name}</span>
-          <HeaderMenu />
+          <HeaderMenu onProfileClick={() => setShowProfile(true)} />
         </div>
       </div>
 

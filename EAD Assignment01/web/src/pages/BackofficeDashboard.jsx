@@ -181,7 +181,16 @@ export default function BackofficeDashboard() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
+        
+        html, body, #root {
+          color-scheme: light only;
+          background: #F3F6F4;
+        }
+
         .bo-root {
+          
+          color-scheme: light;
+
           --green: #146B5C; --green-d: #0F5548; --forest: #0B3F36;
           --amber: #E08E2B; --amber-d: #C9701B; --amber-text: #A65A0E;
           --ink: #14201B; --body: #43524B; --muted: #5F6F67;
@@ -193,6 +202,9 @@ export default function BackofficeDashboard() {
           -webkit-font-smoothing: antialiased;
         }
         .bo-root *, .bo-root *::before, .bo-root *::after { box-sizing: border-box; }
+        .bo-root input, .bo-root select, .bo-root textarea, .bo-root button {
+          color-scheme: light;
+        }
         .bo-display { font-family: 'Sora', 'Inter', sans-serif; }
         .bo-root button { font: inherit; }
         .bo-root :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
@@ -484,9 +496,7 @@ export default function BackofficeDashboard() {
         </div>
 
         <div className="bo-user">
-          <div className="bo-avatar" style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{initials}</div>
-          <span style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{user?.name}</span>
-          <HeaderMenu />
+          <HeaderMenu onProfileClick={() => setShowProfile(true)} />
         </div>
       </div>
 

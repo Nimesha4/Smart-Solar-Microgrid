@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Moon, Sun, LogOut } from 'lucide-react';
+import { Menu, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function HeaderMenu() {
+export default function HeaderMenu({ onProfileClick }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
@@ -18,21 +17,14 @@ export default function HeaderMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const toggleTheme = () => {
-    if (isDark) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      setIsDark(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setIsDark(true);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login');
+  };
+
+  const handleProfile = () => {
+    setIsOpen(false);
+    if (onProfileClick) onProfileClick();
   };
 
   return (
@@ -43,9 +35,9 @@ export default function HeaderMenu() {
       
       {isOpen && (
         <div className="hm-dropdown">
-          <button className="hm-item" onClick={toggleTheme}>
-            {isDark ? <Sun size={16} /> : <Moon size={16} />}
-            <span>{isDark ? 'Light mode' : 'Dark mode'}</span>
+          <button className="hm-item" onClick={handleProfile}>
+            <User size={16} />
+            <span>Profile</span>
           </button>
           <div className="hm-divider"></div>
           <button className="hm-item hm-danger" onClick={handleLogout}>
