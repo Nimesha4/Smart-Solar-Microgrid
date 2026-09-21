@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Sun, Zap, CalendarClock, QrCode, X, MapPin, BatteryCharging, Leaf,
   Clock, ShieldCheck, Copy, Check, Ticket, Hourglass,
@@ -342,48 +342,47 @@ export default function ProsumerDashboard() {
         .pr-bar {
           position: sticky; top: 0; z-index: 30;
           display: flex; align-items: center; justify-content: space-between;
-          gap: 16px; padding: 14px 40px;
-          background: rgba(255,255,255,0.86);
-          backdrop-filter: blur(10px);
+          gap: 16px; padding: 14px 40px; width: 100%;
+          background: rgba(255,255,255,0.86); backdrop-filter: blur(10px);
           border-bottom: 1px solid var(--line);
         }
-        .pr-brand { display: flex; align-items: center; gap: 12px; }
+        .pr-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
         .pr-mark {
-          width: 36px; height: 36px; border-radius: 10px; flex: none;
+          width: 38px; height: 38px; border-radius: 10px; flex: none;
           background: linear-gradient(135deg, #E08E2B, #C9701B);
           display: flex; align-items: center; justify-content: center;
         }
-        .pr-brand h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
-        .pr-brand span { font-size: 12.5px; color: var(--muted); }
+        .pr-brand h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+        .pr-brand span { display: block; margin-top: 1px; font-size: 12px; color: var(--muted); }
 
-        .pr-tabs-header { display: flex; gap: 4px; padding: 4px; background: #E8EEEA; border-radius: 12px; }
+        .pr-tabs-header { display: flex; gap: 4px; }
         .pr-tab {
-          display: inline-flex; align-items: center; gap: 8px;
+          display: inline-flex; align-items: center; gap: 6px;
           font-size: 14px; font-weight: 600; cursor: pointer;
-          padding: 8px 16px; border: none; background: transparent;
+          padding: 8px 14px; border: none; background: transparent;
           color: var(--muted); border-radius: 9px;
-          transition: color .15s ease, background-color .15s ease, box-shadow .15s ease;
+          transition: color .12s ease, background-color .12s ease;
         }
-        .pr-tab:hover { color: var(--ink); }
-        .pr-tab.active { color: var(--ink); background: #FFFFFF; box-shadow: 0 1px 3px rgba(20,32,27,0.14); }
+        .pr-tab:hover { color: var(--ink); background: #E8EEEA; }
+        .pr-tab.active { color: var(--ink); background: transparent; }
         .pr-tab-count {
           min-width: 20px; padding: 1px 6px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
           background: rgba(20,107,92,0.12); color: var(--green); text-align: center;
         }
 
-        .pr-user { display: flex; align-items: center; gap: 12px; }
+        .pr-user { display: flex; align-items: center; gap: 10px; }
         .pr-avatar {
-          width: 34px; height: 34px; border-radius: 50%; flex: none;
-          background: var(--green); color: #FFFFFF; font-size: 12.5px; font-weight: 700;
+          width: 32px; height: 32px; border-radius: 50%; flex: none;
+          background: var(--green); color: #FFFFFF; font-size: 12px; font-weight: 700;
           display: flex; align-items: center; justify-content: center; font-family: 'Sora', sans-serif;
         }
         .pr-user span { font-size: 13.5px; font-weight: 600; color: #33413A; }
         .pr-btn {
-          font-size: 13px; font-weight: 600; cursor: pointer;
-          padding: 8px 14px; border-radius: 9px; border: 1px solid #D6DED9; background: #FFFFFF; color: #33413A;
-          transition: border-color .12s ease;
+          font-size: 14px; font-weight: 600; cursor: pointer;
+          padding: 9px 16px; border-radius: 9px; border: 1px solid #D6DED9; background: #FFFFFF; color: var(--ink);
+          transition: background-color .12s ease;
         }
-        .pr-btn:hover { border-color: var(--ink); }
+        .pr-btn:hover { background: #E8EEEA; border-color: transparent; }
 
         /* ---- Page shell ---- */
         .pr-page { max-width: 1320px; margin: 0 auto; padding: 32px 40px 72px; }
@@ -655,15 +654,15 @@ export default function ProsumerDashboard() {
 
       {/* Top bar */}
       <div className="pr-bar">
-        <div className="pr-brand">
+        <Link to="/" className="pr-brand">
           <div className="pr-mark">
-            <Sun size={18} color="#FFFFFF" strokeWidth={2.25} />
+            <Sun size={19} color="#FFFFFF" strokeWidth={2.25} />
           </div>
           <div>
-            <h1 className="pr-display">Prosumer</h1>
-            <span>Solar Microgrid network</span>
+            <h2 className="pr-display">Solar Microgrid</h2>
+            <span>Peer-to-peer energy trading</span>
           </div>
-        </div>
+        </Link>
 
         <div className="pr-tabs-header" role="tablist">
           <button role="tab" aria-selected={activeTab === 'reserve'} className={`pr-tab ${activeTab === 'reserve' ? 'active' : ''}`} onClick={() => setActiveTab('reserve')}>Reserve Drop-off</button>
@@ -674,8 +673,6 @@ export default function ProsumerDashboard() {
         </div>
 
         <div className="pr-user">
-          <div className="pr-avatar">{initials}</div>
-          <span>{user?.name}</span>
           <button onClick={logout} className="pr-btn">Sign out</button>
         </div>
       </div>
@@ -967,7 +964,7 @@ export default function ProsumerDashboard() {
           </>
         )}
 
-        <div className="pr-foot">Photography from Pexels · CO₂ figures are estimates based on {CO2_KG_PER_KWH} kg per kWh</div>
+        <div className="pr-foot">&copy; 2026 Solar Microgrid. All rights reserved. &middot; CO₂ figures are estimates based on {CO2_KG_PER_KWH} kg per kWh</div>
       </div>
     </div>
   );

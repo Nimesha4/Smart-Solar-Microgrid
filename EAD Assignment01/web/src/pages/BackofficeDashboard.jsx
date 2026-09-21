@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Sun, Users, Search, Plus, Power, Clock, MapPin, BatteryCharging, Zap } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -197,43 +197,43 @@ export default function BackofficeDashboard() {
         .bo-bar {
           position: sticky; top: 0; z-index: 30;
           display: flex; align-items: center; justify-content: space-between;
-          gap: 16px; padding: 14px 40px;
-          background: rgba(255,255,255,0.86);
-          backdrop-filter: blur(10px);
+          gap: 16px; padding: 14px 40px; width: 100%;
+          background: rgba(255,255,255,0.86); backdrop-filter: blur(10px);
           border-bottom: 1px solid var(--line);
         }
-        .bo-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .bo-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
         .bo-mark {
-          width: 36px; height: 36px; border-radius: 10px; flex: none;
+          width: 38px; height: 38px; border-radius: 10px; flex: none;
           background: linear-gradient(135deg, #E08E2B, #C9701B);
           display: flex; align-items: center; justify-content: center;
         }
-        .bo-brand h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
-        .bo-brand span { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+        .bo-brand h2 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+        .bo-brand span { display: block; margin-top: 1px; font-size: 12px; color: var(--muted); }
 
-        .bo-btn {
-          font-size: 13px; font-weight: 600; cursor: pointer;
-          padding: 8px 14px; border-radius: 9px; border: 1px solid transparent;
-          transition: background-color .12s ease, border-color .12s ease, color .12s ease, transform .1s ease;
-        }
-        .bo-btn:active { transform: translateY(1px); }
-        .bo-quiet { background: #FFFFFF; border-color: #D6DED9; color: #33413A; }
-        .bo-quiet:hover { border-color: var(--ink); }
-
-        .bo-tabs-header { display: flex; gap: 4px; padding: 4px; background: #E8EEEA; border-radius: 12px; }
+        .bo-tabs-header { display: flex; gap: 4px; }
         .bo-tab {
-          display: inline-flex; align-items: center; gap: 8px;
+          display: inline-flex; align-items: center; gap: 6px;
           font-size: 14px; font-weight: 600; cursor: pointer;
-          padding: 8px 16px; border: none; background: transparent;
+          padding: 8px 14px; border: none; background: transparent;
           color: var(--muted); border-radius: 9px;
-          transition: color .15s ease, background-color .15s ease, box-shadow .15s ease;
+          transition: color .12s ease, background-color .12s ease;
         }
-        .bo-tab:hover { color: var(--ink); }
-        .bo-tab.active { color: var(--ink); background: #FFFFFF; box-shadow: 0 1px 3px rgba(20,32,27,0.14); }
+        .bo-tab:hover { color: var(--ink); background: #E8EEEA; }
+        .bo-tab.active { color: var(--ink); background: transparent; }
         .bo-tab-count {
           min-width: 20px; padding: 1px 6px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
           background: rgba(20,107,92,0.12); color: var(--green); text-align: center;
         }
+
+        .bo-btn {
+          font-size: 14px; font-weight: 600; cursor: pointer;
+          padding: 9px 16px; border-radius: 9px;
+          border: none; background: var(--green); color: #FFFFFF;
+          transition: background-color .12s ease;
+        }
+        .bo-btn:hover { background: var(--green-d); }
+        .bo-quiet { background: transparent; color: var(--ink); border: 1px solid #D6DED9; }
+        .bo-quiet:hover { background: #E8EEEA; color: var(--ink); border-color: transparent; }
 
         /* ---- Page shell ---- */
         .bo-page { max-width: 1320px; margin: 0 auto; padding: 32px 40px 72px; }
@@ -451,15 +451,15 @@ export default function BackofficeDashboard() {
 
       {/* Top bar */}
       <div className="bo-bar">
-        <div className="bo-brand">
+        <Link to="/" className="bo-brand">
           <div className="bo-mark">
-            <Sun size={18} color="#FFFFFF" strokeWidth={2.25} />
+            <Sun size={19} color="#FFFFFF" strokeWidth={2.25} />
           </div>
           <div>
-            <h1 className="bo-display">Backoffice</h1>
-            <span>Solar Microgrid network</span>
+            <h2 className="bo-display">Solar Microgrid</h2>
+            <span>Peer-to-peer energy trading</span>
           </div>
-        </div>
+        </Link>
 
         <div className="bo-tabs-header" role="tablist">
           <button role="tab" aria-selected={activeTab === 'users'} className={`bo-tab ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
@@ -742,7 +742,7 @@ export default function BackofficeDashboard() {
           </>
         )}
 
-        <div className="bo-foot">Photography from Pexels</div>
+        <div className="bo-foot">&copy; 2026 Solar Microgrid. All rights reserved.</div>
       </div>
     </div>
   );
