@@ -395,7 +395,7 @@ export default function Register() {
                   <label>Full name</label>
                   <div className="rg-input-wrap">
                     <User size={16} />
-                    <input type="text" placeholder="Jane Perera" value={name} onChange={(e) => setName(e.target.value)} required />
+                    <input type="text" placeholder="Enter Your Name" value={name} onChange={(e) => setName(e.target.value)} required />
                   </div>
                 </div>
 
@@ -420,7 +420,7 @@ export default function Register() {
                   <label>Email</label>
                   <div className="rg-input-wrap">
                     <Mail size={16} />
-                    <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    <input type="email" placeholder="name@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
                 </div>
 

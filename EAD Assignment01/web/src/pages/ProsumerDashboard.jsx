@@ -5,6 +5,8 @@ import {
   Sun, Zap, CalendarClock, QrCode, X, MapPin, BatteryCharging, Leaf,
   Clock, ShieldCheck, Copy, Check, Ticket, Hourglass,
 } from 'lucide-react';
+import ProfileModal from '../components/ProfileModal';
+import HeaderMenu from '../components/HeaderMenu';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -180,6 +182,7 @@ export default function ProsumerDashboard() {
   const [filter, setFilter] = useState('All');
   const [copied, setCopied] = useState(null);
   const [loaded, setLoaded] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
@@ -668,14 +671,17 @@ export default function ProsumerDashboard() {
           <button role="tab" aria-selected={activeTab === 'reserve'} className={`pr-tab ${activeTab === 'reserve' ? 'active' : ''}`} onClick={() => setActiveTab('reserve')}>Reserve Drop-off</button>
           <button role="tab" aria-selected={activeTab === 'history'} className={`pr-tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>
             My Reservations
-            {reservations.length > 0 && <span className="pr-tab-count">{reservations.length}</span>}
           </button>
         </div>
 
         <div className="pr-user">
-          <button onClick={logout} className="pr-btn">Sign out</button>
+          <div className="pr-avatar" style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{initials}</div>
+          <span style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{user?.name}</span>
+          <HeaderMenu />
         </div>
       </div>
+
+      {showProfile && <ProfileModal user={user} onClose={() => setShowProfile(false)} />}
 
       <div className="pr-page">
 

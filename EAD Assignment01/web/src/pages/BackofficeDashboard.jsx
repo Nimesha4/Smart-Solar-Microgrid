@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { Sun, Users, Search, Plus, Power, Clock, MapPin, BatteryCharging, Zap } from 'lucide-react';
+import { Sun, Users, Search, Plus, Power, Clock, MapPin, BatteryCharging, Zap, X } from 'lucide-react';
+import ProfileModal from '../components/ProfileModal';
+import HeaderMenu from '../components/HeaderMenu';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -71,11 +73,14 @@ export default function BackofficeDashboard() {
   const [userFilter, setUserFilter] = useState('All');
   const [hubFilter, setHubFilter] = useState('All');
   const [loaded, setLoaded] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const navigate = useNavigate();
 
+  const user = JSON.parse(localStorage.getItem('user'));
+  const initials = (user?.name || '?').split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
     if (!user || user.role !== 'Backoffice') navigate('/login');
     fetchData();
   }, [navigate]);
@@ -224,6 +229,14 @@ export default function BackofficeDashboard() {
           min-width: 20px; padding: 1px 6px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
           background: rgba(20,107,92,0.12); color: var(--green); text-align: center;
         }
+
+        .bo-user { display: flex; align-items: center; gap: 10px; }
+        .bo-avatar {
+          width: 32px; height: 32px; border-radius: 50%; flex: none;
+          background: var(--green); color: #FFFFFF; font-size: 12px; font-weight: 700;
+          display: flex; align-items: center; justify-content: center; font-family: 'Sora', sans-serif;
+        }
+        .bo-user span { font-size: 13.5px; font-weight: 600; color: #33413A; }
 
         .bo-btn {
           font-size: 14px; font-weight: 600; cursor: pointer;
@@ -464,16 +477,20 @@ export default function BackofficeDashboard() {
         <div className="bo-tabs-header" role="tablist">
           <button role="tab" aria-selected={activeTab === 'users'} className={`bo-tab ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
             Users
-            {users.length > 0 && <span className="bo-tab-count">{users.length}</span>}
           </button>
           <button role="tab" aria-selected={activeTab === 'nodes'} className={`bo-tab ${activeTab === 'nodes' ? 'active' : ''}`} onClick={() => setActiveTab('nodes')}>
             Microgrid Hubs
-            {nodes.length > 0 && <span className="bo-tab-count">{nodes.length}</span>}
           </button>
         </div>
 
-        <button onClick={logout} className="bo-btn bo-quiet">Sign out</button>
+        <div className="bo-user">
+          <div className="bo-avatar" style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{initials}</div>
+          <span style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{user?.name}</span>
+          <HeaderMenu />
+        </div>
       </div>
+
+      {showProfile && <ProfileModal user={user} onClose={() => setShowProfile(false)} />}
 
       <div className="bo-page">
 

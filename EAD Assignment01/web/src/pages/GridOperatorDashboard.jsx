@@ -3,8 +3,10 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Sun, Minus, Plus, Battery, Clock, QrCode, MapPin, BatteryCharging, Zap,
-  Hourglass, CheckCircle2, Ticket, User,
+  Hourglass, CheckCircle2, Ticket, User, X
 } from 'lucide-react';
+import ProfileModal from '../components/ProfileModal';
+import HeaderMenu from '../components/HeaderMenu';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -174,10 +176,13 @@ export default function GridOperatorDashboard() {
   const [activeTab, setActiveTab] = useState('hubs');
   const [filter, setFilter] = useState('All');
   const [loaded, setLoaded] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const navigate = useNavigate();
 
+  const user = JSON.parse(localStorage.getItem('user'));
+  const initials = (user?.name || '?').split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
     if (!user || user.role !== 'GridOperator') navigate('/login');
     fetchData();
   }, [navigate]);
@@ -342,6 +347,14 @@ export default function GridOperatorDashboard() {
           min-width: 20px; padding: 1px 6px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
           background: rgba(20,107,92,0.12); color: var(--green); text-align: center;
         }
+
+        .go-user { display: flex; align-items: center; gap: 10px; }
+        .go-avatar {
+          width: 32px; height: 32px; border-radius: 50%; flex: none;
+          background: var(--green); color: #FFFFFF; font-size: 12px; font-weight: 700;
+          display: flex; align-items: center; justify-content: center; font-family: 'Sora', sans-serif;
+        }
+        .go-user span { font-size: 13.5px; font-weight: 600; color: #33413A; }
 
         .go-btn {
           font-size: 14px; font-weight: 600; cursor: pointer;
@@ -585,12 +598,17 @@ export default function GridOperatorDashboard() {
           <button role="tab" aria-selected={activeTab === 'hubs'} className={`go-tab ${activeTab === 'hubs' ? 'active' : ''}`} onClick={() => setActiveTab('hubs')}>Battery Slots</button>
           <button role="tab" aria-selected={activeTab === 'bookings'} className={`go-tab ${activeTab === 'bookings' ? 'active' : ''}`} onClick={() => setActiveTab('bookings')}>
             Bookings
-            {pendingCount > 0 && <span className="go-tab-count">{pendingCount}</span>}
           </button>
         </div>
 
-        <button onClick={logout} className="go-btn go-quiet">Sign out</button>
+        <div className="go-user">
+          <div className="go-avatar" style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{initials}</div>
+          <span style={{cursor: 'pointer'}} onClick={() => setShowProfile(true)}>{user?.name}</span>
+          <HeaderMenu />
+        </div>
       </div>
+
+      {showProfile && <ProfileModal user={user} onClose={() => setShowProfile(false)} />}
 
       <div className="go-page">
 

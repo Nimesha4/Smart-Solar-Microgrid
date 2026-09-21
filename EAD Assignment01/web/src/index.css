@@ -1,3 +1,100 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ---- Profile Modal Shared CSS ---- */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(20, 32, 27, 0.4); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  animation: fade-in 0.2s ease;
+}
+.modal-content {
+  background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 24px; padding: 40px; width: 100%; max-width: 520px;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.12);
+  animation: slide-up 0.3s cubic-bezier(.2,.7,.2,1);
+  position: relative; max-height: 90vh; overflow-y: auto;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.prof-close {
+  position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
+  border-radius: 50%; border: none; background: rgba(0,0,0,0.04);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  color: #5F6F67; transition: background .15s ease, color .15s ease;
+}
+.prof-close:hover { background: rgba(0,0,0,0.08); color: #14201B; }
+.prof-ava {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: #146B5C; color: #FFF; font-size: 26px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; font-family: 'Sora', sans-serif;
+  margin: 0 auto 16px;
+}
+.prof-name { font-size: 22px; font-weight: 700; color: #14201B; margin: 0 0 4px; font-family: 'Sora', sans-serif; text-align: center; }
+.prof-role { font-size: 14px; font-weight: 600; color: #146B5C; margin-bottom: 24px; text-align: center; }
+.prof-detail { display: flex; justify-content: space-between; padding: 16px 8px; border-bottom: 1px solid #E1E8E4; font-size: 15px; }
+.prof-detail:last-child { border-bottom: none; margin-bottom: 24px; }
+.prof-lbl { color: #5F6F67; }
+.prof-val { font-weight: 600; color: #14201B; }
+
+.prof-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.prof-btn { width: 100%; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; border: none; transition: all 0.15s ease; }
+.prof-btn-primary { background: #146B5C; color: #FFF; }
+.prof-btn-primary:hover { background: #0F5548; }
+.prof-btn-danger { background: transparent; color: #E11D48; box-shadow: inset 0 0 0 1.5px #E11D48; }
+.prof-btn-danger:hover { background: #E11D48; color: #FFF; }
+.prof-btn-quiet { background: transparent; color: #5F6F67; }
+.prof-btn-quiet:hover { background: #E8EEEA; color: #14201B; }
+
+.prof-edit-form { text-align: left; }
+.prof-err { background: #fee2e2; color: #b91c1c; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 20px; font-weight: 500; }
+.prof-group { margin-bottom: 16px; }
+.prof-group label { display: block; font-size: 13px; font-weight: 600; color: #5F6F67; margin-bottom: 6px; }
+.prof-group input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #D6DED9; font-size: 14px; color: #14201B; transition: border-color 0.15s ease; }
+.prof-group input:focus { outline: none; border-color: #146B5C; box-shadow: 0 0 0 3px rgba(20, 107, 92, 0.1); }
+.prof-group input:disabled { background: #F3F6F4; color: #5F6F67; cursor: not-allowed; }
+.prof-pw-section { margin-top: 28px; padding-top: 20px; border-top: 1px solid #E1E8E4; }
+.prof-pw-section h4 { margin: 0 0 4px 0; font-size: 16px; font-family: 'Sora', sans-serif; color: #14201B; }
+.prof-pw-section p { margin: 0 0 16px 0; font-size: 13px; color: #5F6F67; }
+
+
+/* ---- Header Menu ---- */
+.hm-container { position: relative; margin-left: 12px; }
+.hm-btn {
+  width: 38px; height: 38px; border-radius: 50%; border: 1px solid #D6DED9;
+  background: #FFF; color: #14201B; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.hm-btn:hover { background: #E8EEEA; }
+.hm-dropdown {
+  position: absolute; top: 100%; right: 0; margin-top: 8px; width: 160px;
+  background: #FFF; border: 1px solid #E1E8E4; border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 6px; z-index: 50;
+  display: flex; flex-direction: column; animation: fade-in 0.15s ease;
+}
+.hm-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px;
+  border: none; background: transparent; cursor: pointer; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: #43524B; transition: all 0.2s;
+}
+.hm-item:hover { background: #F3F6F4; color: #14201B; }
+.hm-divider { height: 1px; background: #E1E8E4; margin: 4px 0; }
+.hm-danger { color: #E11D48; }
+.hm-danger:hover { background: #FFF1F2; color: #BE123C; }
+
+/* ---- Basic Dark Mode Filter ---- */
+html.dark {
+  filter: invert(1) hue-rotate(180deg);
+}
+/* Revert images, SVGs, and hero backgrounds so they don't look weird */
+html.dark img, 
+html.dark svg, 
+html.dark .pr-hero, 
+html.dark .go-hero, 
+html.dark .bo-hero,
+html.dark .lg-art {
+  filter: invert(1) hue-rotate(180deg);
+}
