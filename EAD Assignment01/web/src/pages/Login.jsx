@@ -269,10 +269,12 @@ export default function Login() {
 
         .lg-roles { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
         .lg-roles p { margin: 0 0 14px; font-size: 13px; font-weight: 600; color: var(--body); }
-        .lg-role-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .lg-role-row { display: flex; flex-wrap: nowrap; gap: 6px; }
         .lg-role {
-          display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px;
-          background: #FFFFFF; border: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--body);
+          flex: 1; justify-content: center;
+          display: inline-flex; align-items: center; gap: 6px; padding: 8px 6px; border-radius: 999px;
+          background: #FFFFFF; border: 1px solid var(--line); font-size: 12px; font-weight: 600; color: var(--body);
+          white-space: nowrap;
         }
         .lg-role svg { color: var(--green); }
         .lg-help { margin: 14px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
@@ -306,7 +308,7 @@ export default function Login() {
         </Link>
 
         <div className="lg-copy">
-          <span className="lg-chip"><i />Live across grid hubs in Sri Lanka</span>
+          
           <h2 className="lg-display">Your surplus energy, put to work.</h2>
           <p>Sign in to book a drop-off, monitor a hub, or manage the network — whichever seat you sit in.</p>
         </div>
@@ -403,7 +405,7 @@ export default function Login() {
                 <span className="lg-role"><Sun size={14} />Prosumer</span>
                 <span className="lg-role"><Wrench size={14} />Grid operator</span>
                 <span className="lg-role"><ShieldCheck size={14} />Backoffice</span>
-              </div>
+              </div><br></br>
               <p className="lg-help">Account deactivated? Ask Backoffice to reactivate it.</p>
             </div>
           </div>

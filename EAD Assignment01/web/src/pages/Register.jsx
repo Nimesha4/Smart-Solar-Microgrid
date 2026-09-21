@@ -372,20 +372,13 @@ export default function Register() {
                 </div>
               </div>
 
-              <div className="rg-field" style={{ marginBottom: 22 }}>
-                <label>Role</label>
-                <div className="rg-role-seg">
-                  {roles.map(({ value, label, icon: Icon }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setRole(value)}
-                      className={`rg-role-btn ${role === value ? 'rg-active' : ''}`}
-                    >
-                      <Icon />
-                      <span>{label}</span>
-                    </button>
-                  ))}
+              <div className="rg-field" style={{ marginBottom: 24 }}>
+                <label>Account type</label>
+                <div className="rg-role-seg" style={{ gridTemplateColumns: '1fr' }}>
+                  <div className="rg-role-btn rg-active" style={{ cursor: 'default', flexDirection: 'row', justifyContent: 'center', gap: '8px', padding: '14px' }}>
+                    <Zap size={18} />
+                    <span style={{ fontSize: '13.5px' }}>Prosumer</span>
+                  </div>
                 </div>
               </div>
 
