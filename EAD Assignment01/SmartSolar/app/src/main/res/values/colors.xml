@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_green">#146B5C</color>
+    <color name="brand_forest">#0B3F36</color>
+    <color name="brand_amber">#E08E2B</color>
+    <color name="brand_ink">#14201B</color>
+    <color name="brand_muted">#5F6F67</color>
+    <color name="brand_bg">#EAEFEF</color>
+    <color name="brand_white">#FFFFFF</color>
+    <color name="brand_red">#B3261E</color>
+    <color name="chip_amber_bg">#FFF4E0</color>
+    <color name="chip_green_bg">#E2F2EC</color>
+    <color name="chip_grey_bg">#ECEFF0</color>
+</resources>

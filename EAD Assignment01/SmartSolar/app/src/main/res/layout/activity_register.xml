@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:fillViewport="true" android:background="@color/brand_bg">
+
+    <LinearLayout android:orientation="vertical"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:padding="28dp">
+
+        <TextView android:text="Create your Prosumer account" android:textSize="22sp"
+            android:textStyle="bold" android:textColor="@color/brand_forest"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" />
+
+        <TextView android:text="NIC Number" android:layout_marginTop="20dp"
+            android:textColor="@color/brand_muted" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <EditText android:id="@+id/etNic" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:inputType="text" />
+
+        <TextView android:text="Full Name" android:layout_marginTop="12dp"
+            android:textColor="@color/brand_muted" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <EditText android:id="@+id/etName" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:inputType="textPersonName" />
+
+        <TextView android:text="Email" android:layout_marginTop="12dp"
+            android:textColor="@color/brand_muted" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <EditText android:id="@+id/etEmail" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:inputType="textEmailAddress" />
+
+        <TextView android:text="Password" android:layout_marginTop="12dp"
+            android:textColor="@color/brand_muted" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <EditText android:id="@+id/etPassword" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:inputType="textPassword" />
+
+        <Button android:id="@+id/btnRegister" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="20dp"
+            android:backgroundTint="@color/brand_forest"
+            android:textColor="@color/brand_white" android:text="Register" />
+
+        <TextView android:id="@+id/tvLogin" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="14dp"
+            android:gravity="center" android:text="Already have an account? Sign in"
+            android:textColor="@color/brand_green" android:textStyle="bold" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:background="@color/brand_bg">
+
+    <LinearLayout android:orientation="horizontal"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:background="@color/brand_forest" android:gravity="center_vertical"
+        android:padding="14dp">
+        <TextView android:id="@+id/tvWelcome" android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="Backoffice" android:textSize="18sp" android:textStyle="bold"
+            android:textColor="@color/brand_white" />
+        <Button android:id="@+id/btnLogout" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="Logout"
+            android:backgroundTint="@color/brand_white"
+            android:textColor="@color/brand_forest" />
+    </LinearLayout>
+
+    <LinearLayout android:orientation="horizontal"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:padding="10dp">
+        <Button android:id="@+id/btnTabUsers" android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_weight="1"
+            android:layout_marginEnd="5dp" android:text="Users"
+            android:backgroundTint="@color/brand_amber"
+            android:textColor="@color/brand_white" />
+        <Button android:id="@+id/btnTabHubs" android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_weight="1"
+            android:layout_marginStart="5dp" android:text="Hubs"
+            android:backgroundTint="@color/chip_grey_bg"
+            android:textColor="@color/brand_ink" />
+    </LinearLayout>
+
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1">
+        <LinearLayout android:orientation="vertical"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- USERS PANEL -->
+            <LinearLayout android:id="@+id/panelUsers" android:orientation="vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content">
+                <EditText android:id="@+id/etSearch" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:hint="Search name / NIC / email" />
+                <Spinner android:id="@+id/spinnerRoleFilter" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:layout_marginTop="8dp" />
+                <LinearLayout android:id="@+id/containerUsers" android:orientation="vertical"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp" />
+            </LinearLayout>
+
+            <!-- HUBS PANEL -->
+            <LinearLayout android:id="@+id/panelHubs" android:orientation="vertical"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:visibility="gone">
+
+                <TextView android:text="Create Microgrid Node" android:textSize="18sp"
+                    android:textStyle="bold" android:textColor="@color/brand_forest"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                <EditText android:id="@+id/etNodeName" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:layout_marginTop="10dp"
+                    android:hint="Node name" />
+                <EditText android:id="@+id/etCapacity" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:layout_marginTop="8dp"
+                    android:inputType="numberDecimal" android:hint="Capacity (kWh)" />
+                <EditText android:id="@+id/etSlots" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:layout_marginTop="8dp"
+                    android:inputType="number" android:hint="Available battery slots" />
+                <Button android:id="@+id/btnCreateNode" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:layout_marginTop="12dp"
+                    android:backgroundTint="@color/brand_forest"
+                    android:textColor="@color/brand_white" android:text="Create Node" />
+
+                <TextView android:text="Existing Hubs" android:textSize="16sp"
+                    android:textStyle="bold" android:textColor="@color/brand_forest"
+                    android:layout_marginTop="20dp"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                <LinearLayout android:id="@+id/containerHubs" android:orientation="vertical"
+                    android:layout_width="match_parent" android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
