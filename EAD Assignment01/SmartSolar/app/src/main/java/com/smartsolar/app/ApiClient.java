@@ -1,7 +1,16 @@
 package com.smartsolar.app;
 
 import com.google.gson.annotations.SerializedName;
+
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import javax.net.ssl.*;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -11,17 +20,85 @@ public class ApiClient {
 
     // 10.0.2.2 = your PC's localhost as seen from the Android Emulator.
     // Physical phone on same Wi-Fi: use your PC's LAN IP, e.g. http://192.168.1.5:5199/api/
-    private static final String BASE_URL = "http://10.0.2.2:5199/api/";
+    private static String BASE_URL = "http://10.0.2.2:5199/api/";
     private static Retrofit retrofit;
+
+    public static void setBaseUrl(String newUrl) {
+        if (!newUrl.endsWith("/")) {
+            newUrl += "/";
+        }
+        BASE_URL = newUrl;
+        retrofit = null;
+    }
+
+    public static String getBaseUrl() {
+        return BASE_URL;
+    }
 
     public static ApiService api() {
         if (retrofit == null) {
+            OkHttpClient okHttpClient = getUnsafeOkHttpClient();
             retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
+                    .client(okHttpClient)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
         return retrofit.create(ApiService.class);
+    }
+
+    /**
+     * Configures an OkHttpClient that:
+     * 1) Accepts self-signed SSL certificates for HTTPS local dev (e.g. https://10.0.2.2:7117/api/)
+     * 2) Intercepts redirects and rewrites 'localhost' to '10.0.2.2' if needed
+     * 3) Sets 30-second timeouts to avoid quick timeouts during backend startup
+     */
+    private static OkHttpClient getUnsafeOkHttpClient() {
+        try {
+            final TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {}
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {}
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[]{};
+                    }
+                }
+            };
+
+            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new SecureRandom());
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
+            builder.hostnameVerifier((hostname, session) -> true);
+
+            builder.connectTimeout(30, TimeUnit.SECONDS);
+            builder.readTimeout(30, TimeUnit.SECONDS);
+            builder.writeTimeout(30, TimeUnit.SECONDS);
+
+            builder.addNetworkInterceptor(chain -> {
+                Request request = chain.request();
+                Response response = chain.proceed(request);
+                if (response.isRedirect()) {
+                    String location = response.header("Location");
+                    if (location != null && location.contains("localhost")) {
+                        String newLocation = location.replace("localhost", "10.0.2.2");
+                        return response.newBuilder()
+                                .header("Location", newLocation)
+                                .build();
+                    }
+                }
+                return response;
+            });
+
+            return builder.build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /** Extracts the plain-text error the ASP.NET backend returns (e.g. the 7-day / 12-hour rules). */

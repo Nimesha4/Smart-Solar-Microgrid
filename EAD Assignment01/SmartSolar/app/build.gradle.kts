@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.smartsolar.app"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.smartsolar.app"
