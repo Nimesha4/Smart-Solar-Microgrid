@@ -3,11 +3,16 @@ package com.smartsolar.app;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
 import android.widget.*;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import java.util.*;
@@ -31,7 +36,7 @@ public class GridOperatorDashboardActivity extends AppCompatActivity {
         db = new DatabaseHelper(this);
         String[] user = db.getLocalUser();
         if (user == null) { logout(); return; }
-        ((TextView) findViewById(R.id.tvWelcome)).setText("Operator " + user[2]);
+        ((TextView) findViewById(R.id.tvWelcome)).setText("Operator • " + user[2]);
 
         panelHubs = findViewById(R.id.panelHubs);
         panelReservations = findViewById(R.id.panelReservations);
@@ -53,9 +58,12 @@ public class GridOperatorDashboardActivity extends AppCompatActivity {
         panelHubs.setVisibility(hubs ? View.VISIBLE : View.GONE);
         panelReservations.setVisibility(hubs ? View.GONE : View.VISIBLE);
         btnTabHubs.setBackgroundTintList(ColorStateList.valueOf(
-                ContextCompat.getColor(this, hubs ? R.color.brand_amber : R.color.chip_grey_bg)));
+                ContextCompat.getColor(this, hubs ? R.color.brand_forest : R.color.chip_grey_bg)));
+        btnTabHubs.setTextColor(ContextCompat.getColor(this, hubs ? R.color.brand_white : R.color.brand_ink));
+
         btnTabReservations.setBackgroundTintList(ColorStateList.valueOf(
-                ContextCompat.getColor(this, hubs ? R.color.chip_grey_bg : R.color.brand_amber)));
+                ContextCompat.getColor(this, hubs ? R.color.chip_grey_bg : R.color.brand_forest)));
+        btnTabReservations.setTextColor(ContextCompat.getColor(this, hubs ? R.color.brand_ink : R.color.brand_white));
     }
 
     // ---------- HUBS + battery slot updates ----------
@@ -68,7 +76,7 @@ public class GridOperatorDashboardActivity extends AppCompatActivity {
                 renderHubs();
             }
             @Override public void onFailure(Call<List<ApiClient.NodeDto>> call, Throwable t) {
-                Toast.makeText(GridOperatorDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(GridOperatorDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -79,25 +87,53 @@ public class GridOperatorDashboardActivity extends AppCompatActivity {
     }
 
     private View hubRow(ApiClient.NodeDto n) {
-        androidx.cardview.widget.CardView card = Ui.card(this);
-        LinearLayout box = Ui.col(this, 12);
+        MaterialCardView card = Ui.card(this);
+        LinearLayout box = Ui.col(this, 16);
 
-        box.addView(Ui.text(this, n.name + (n.isActive ? "" : " (inactive)"), 16, R.color.brand_ink, true));
-        box.addView(Ui.text(this, "Capacity: " + n.capacityKwh + " kWh • " + n.operatingSchedule,
+        LinearLayout headerRow = Ui.row(this, 0);
+        TextView name = Ui.text(this, n.name, 16, R.color.brand_ink, true);
+        LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        name.setLayoutParams(nlp);
+        headerRow.addView(name);
+
+        TextView statusChip = Ui.chip(this, n.isActive ? "Active Hub" : "Inactive",
+                n.isActive ? R.drawable.bg_chip_green : R.drawable.bg_chip_grey,
+                n.isActive ? R.color.chip_green_text : R.color.chip_grey_text);
+        headerRow.addView(statusChip);
+        box.addView(headerRow);
+
+        box.addView(Ui.text(this, "Capacity: " + n.capacityKwh + " kWh   •   Schedule: " + n.operatingSchedule,
                 13, R.color.brand_muted, false));
 
-        EditText etSlots = new EditText(this);
-        etSlots.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
-        etSlots.setText(String.valueOf(n.availableBatterySlots));
-        etSlots.setHint("Battery slots");
-        box.addView(etSlots);
+        TextInputLayout inputLayout = new TextInputLayout(this);
+        inputLayout.setHint("Available Battery Slots");
+        inputLayout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        inputLayout.setBoxCornerRadii(Ui.dp(this, 10), Ui.dp(this, 10), Ui.dp(this, 10), Ui.dp(this, 10));
 
-        Button save = new Button(this);
+        TextInputEditText etSlots = new TextInputEditText(this);
+        etSlots.setInputType(InputType.TYPE_CLASS_NUMBER);
+        etSlots.setText(String.valueOf(n.availableBatterySlots));
+        inputLayout.addView(etSlots);
+
+        LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        ilp.topMargin = Ui.dp(this, 10);
+        inputLayout.setLayoutParams(ilp);
+        box.addView(inputLayout);
+
+        MaterialButton save = new MaterialButton(this);
         save.setText("Update Battery Slots");
-        save.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.brand_green)));
+        save.setCornerRadius(Ui.dp(this, 10));
+        save.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.brand_forest)));
         save.setTextColor(ContextCompat.getColor(this, R.color.brand_white));
+
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 44));
+        slp.topMargin = Ui.dp(this, 10);
+        save.setLayoutParams(slp);
         save.setOnClickListener(v -> {
             try {
+                if (etSlots.getText() == null) return;
                 ApiClient.NodeDto updated = copyNode(n);
                 updated.availableBatterySlots = Integer.parseInt(etSlots.getText().toString().trim());
                 updateNode(n.id, updated);
@@ -124,14 +160,14 @@ public class GridOperatorDashboardActivity extends AppCompatActivity {
             @Override public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
                     Toast.makeText(GridOperatorDashboardActivity.this,
-                            "Successfully updated battery slots for " + updated.name, Toast.LENGTH_LONG).show();
+                            "Updated battery slots for " + updated.name, Toast.LENGTH_LONG).show();
                     loadNodes();
                 } else {
                     Toast.makeText(GridOperatorDashboardActivity.this, "Failed to update battery slots", Toast.LENGTH_LONG).show();
                 }
             }
             @Override public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(GridOperatorDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(GridOperatorDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -146,7 +182,7 @@ public class GridOperatorDashboardActivity extends AppCompatActivity {
                 renderReservations();
             }
             @Override public void onFailure(Call<List<ApiClient.ReservationDto>> call, Throwable t) {
-                Toast.makeText(GridOperatorDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(GridOperatorDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -162,21 +198,38 @@ public class GridOperatorDashboardActivity extends AppCompatActivity {
     }
 
     private View reservationRow(ApiClient.ReservationDto r) {
-        androidx.cardview.widget.CardView card = Ui.card(this);
-        LinearLayout box = Ui.col(this, 12);
+        MaterialCardView card = Ui.card(this);
+        LinearLayout box = Ui.col(this, 16);
 
-        box.addView(Ui.text(this, "Prosumer: " + r.prosumerNic, 15, R.color.brand_ink, true));
-        box.addView(Ui.text(this, nodeName(r.microgridNodeId), 14, R.color.brand_muted, false));
-        box.addView(Ui.text(this, DateUtils.display(r.scheduledTime) + " • " + r.energyAmountKwh + " kWh",
-                14, R.color.brand_muted, false));
-        box.addView(Ui.text(this, "Status: " + r.status, 13,
-                "Approved".equals(r.status) ? R.color.brand_green : R.color.brand_amber, true));
+        LinearLayout headerRow = Ui.row(this, 0);
+        TextView title = Ui.text(this, "Prosumer: " + r.prosumerNic, 15, R.color.brand_ink, true);
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        title.setLayoutParams(tlp);
+        headerRow.addView(title);
 
-        if ("Pending".equals(r.status)) {
-            Button approve = new Button(this);
-            approve.setText("Approve");
+        boolean isApproved = "Approved".equals(r.status);
+        boolean isPending = "Pending".equals(r.status);
+        TextView statusChip = Ui.chip(this, r.status,
+                isApproved ? R.drawable.bg_chip_green : (isPending ? R.drawable.bg_chip_amber : R.drawable.bg_chip_grey),
+                isApproved ? R.color.chip_green_text : (isPending ? R.color.chip_amber_text : R.color.chip_grey_text));
+        headerRow.addView(statusChip);
+        box.addView(headerRow);
+
+        box.addView(Ui.text(this, "Hub: " + nodeName(r.microgridNodeId), 13, R.color.brand_muted, false));
+        box.addView(Ui.text(this, "Scheduled: " + DateUtils.display(r.scheduledTime) + "   •   " + r.energyAmountKwh + " kWh",
+                13, R.color.brand_muted, false));
+
+        if (isPending) {
+            MaterialButton approve = new MaterialButton(this);
+            approve.setText("Approve Reservation");
+            approve.setCornerRadius(Ui.dp(this, 10));
             approve.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.brand_forest)));
             approve.setTextColor(ContextCompat.getColor(this, R.color.brand_white));
+
+            LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 44));
+            alp.topMargin = Ui.dp(this, 12);
+            approve.setLayoutParams(alp);
             approve.setOnClickListener(v -> approveReservation(r.id));
             box.addView(approve);
         }
@@ -197,7 +250,7 @@ public class GridOperatorDashboardActivity extends AppCompatActivity {
                 }
             }
             @Override public void onFailure(Call<ApiClient.ReservationDto> call, Throwable t) {
-                Toast.makeText(GridOperatorDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(GridOperatorDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -206,7 +259,7 @@ public class GridOperatorDashboardActivity extends AppCompatActivity {
 
     private void initiateScan() {
         IntentIntegrator integrator = new IntentIntegrator(this);
-        integrator.setPrompt("Scan the Prosumer's reservation QR code");
+        integrator.setPrompt("Scan Prosumer Reservation QR Code");
         integrator.setOrientationLocked(true);
         integrator.initiateScan();
     }

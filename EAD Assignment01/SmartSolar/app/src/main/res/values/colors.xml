@@ -1,14 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="brand_green">#146B5C</color>
-    <color name="brand_forest">#0B3F36</color>
-    <color name="brand_amber">#E08E2B</color>
-    <color name="brand_ink">#14201B</color>
-    <color name="brand_muted">#5F6F67</color>
-    <color name="brand_bg">#EAEFEF</color>
+    <!-- Brand Primary Colors -->
+    <color name="brand_forest">#0D5C46</color>
+    <color name="brand_green">#10B981</color>
+    <color name="brand_dark_green">#042C21</color>
+    <color name="brand_amber">#F59E0B</color>
+    <color name="brand_amber_dark">#B45309</color>
+    <color name="brand_ink">#0F172A</color>
+    <color name="brand_muted">#64748B</color>
+    <color name="brand_light_muted">#94A3B8</color>
+    <color name="brand_bg">#F8FAFC</color>
+    <color name="brand_card_bg">#FFFFFF</color>
+    <color name="brand_card_stroke">#E2E8F0</color>
     <color name="brand_white">#FFFFFF</color>
-    <color name="brand_red">#B3261E</color>
-    <color name="chip_amber_bg">#FFF4E0</color>
-    <color name="chip_green_bg">#E2F2EC</color>
-    <color name="chip_grey_bg">#ECEFF0</color>
+    <color name="brand_red">#EF4444</color>
+
+    <!-- Chip / Status Badges -->
+    <color name="chip_green_bg">#D1FAE5</color>
+    <color name="chip_green_text">#065F46</color>
+
+    <color name="chip_amber_bg">#FEF3C7</color>
+    <color name="chip_amber_text">#92400E</color>
+
+    <color name="chip_red_bg">#FEE2E2</color>
+    <color name="chip_red_text">#991B1B</color>
+
+    <color name="chip_grey_bg">#F1F5F9</color>
+    <color name="chip_grey_text">#475569</color>
+
+    <!-- Tab states -->
+    <color name="tab_selected_bg">#0D5C46</color>
+    <color name="tab_selected_text">#FFFFFF</color>
+    <color name="tab_unselected_bg">#E2E8F0</color>
+    <color name="tab_unselected_text">#475569</color>
 </resources>

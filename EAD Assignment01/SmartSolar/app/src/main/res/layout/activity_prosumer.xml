@@ -1,91 +1,277 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:background="@color/brand_bg">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/brand_bg">
 
-    <LinearLayout android:orientation="horizontal"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:background="@color/brand_forest" android:gravity="center_vertical"
-        android:padding="14dp">
-        <TextView android:id="@+id/tvWelcome" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_weight="1"
-            android:text="Welcome" android:textSize="18sp" android:textStyle="bold"
-            android:textColor="@color/brand_white" />
-        <Button android:id="@+id/btnLogout" android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:text="Logout"
-            android:backgroundTint="@color/brand_white"
-            android:textColor="@color/brand_forest" />
+    <!-- Top App Bar -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/brand_forest"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_solar_logo"
+            app:tint="@color/brand_amber" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp">
+
+            <TextView
+                android:id="@+id/tvWelcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Welcome Prosumer"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/brand_white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Prosumer Dashboard"
+                android:textSize="12sp"
+                android:textColor="#A7F3D0" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogout"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:text="Logout"
+            android:textSize="13sp"
+            android:textColor="@color/brand_white"
+            app:strokeColor="@color/brand_white"
+            app:strokeWidth="1dp"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/ic_logout"
+            app:iconTint="@color/brand_white"
+            android:paddingStart="10dp"
+            android:paddingEnd="12dp" />
     </LinearLayout>
 
-    <LinearLayout android:orientation="horizontal"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:padding="10dp">
-        <Button android:id="@+id/btnTabReserve" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_weight="1"
-            android:layout_marginEnd="5dp" android:text="Reserve"
-            android:backgroundTint="@color/brand_amber"
-            android:textColor="@color/brand_white" />
-        <Button android:id="@+id/btnTabBookings" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_weight="1"
-            android:layout_marginStart="5dp" android:text="My Bookings"
-            android:backgroundTint="@color/chip_grey_bg"
-            android:textColor="@color/brand_ink" />
+    <!-- Segmented Tab Navigation -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTabReserve"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:text="Reserve Energy"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/brand_white"
+            app:backgroundTint="@color/brand_forest"
+            app:cornerRadius="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTabBookings"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:text="My Bookings"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/brand_ink"
+            app:backgroundTint="@color/chip_grey_bg"
+            app:cornerRadius="12dp" />
     </LinearLayout>
 
-    <ScrollView android:layout_width="match_parent" android:layout_height="0dp"
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:layout_weight="1">
-        <LinearLayout android:orientation="vertical"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:padding="16dp">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="24dp">
 
             <!-- RESERVE PANEL -->
-            <LinearLayout android:id="@+id/panelReserve" android:orientation="vertical"
-                android:layout_width="match_parent" android:layout_height="wrap_content">
-                <TextView android:text="Select Microgrid Node" android:textStyle="bold"
-                    android:textColor="@color/brand_ink" android:layout_width="wrap_content" android:layout_height="wrap_content" />
-                <Spinner android:id="@+id/spinnerNodes" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginTop="6dp" />
+            <LinearLayout
+                android:id="@+id/panelReserve"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-                <TextView android:text="Energy Amount (kWh)" android:textStyle="bold"
-                    android:textColor="@color/brand_ink" android:layout_marginTop="16dp"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
-                <EditText android:id="@+id/etEnergy" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:inputType="numberDecimal"
-                    android:hint="e.g. 12.5" />
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="@color/brand_card_stroke"
+                    app:strokeWidth="1dp"
+                    app:cardBackgroundColor="@color/brand_card_bg">
 
-                <TextView android:text="Scheduled Date &amp; Time (max 7 days ahead)"
-                    android:textStyle="bold" android:textColor="@color/brand_ink"
-                    android:layout_marginTop="16dp" android:layout_width="wrap_content" android:layout_height="wrap_content" />
-                <Button android:id="@+id/btnPickDate" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginTop="6dp"
-                    android:backgroundTint="@color/brand_green"
-                    android:textColor="@color/brand_white" android:text="Pick date &amp; time" />
-                <TextView android:id="@+id/tvDateChosen" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:layout_marginTop="8dp"
-                    android:text="No date selected" android:textColor="@color/brand_muted" />
+                    <LinearLayout
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="20dp">
 
-                <Button android:id="@+id/btnCreate" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginTop="20dp"
-                    android:backgroundTint="@color/brand_forest"
-                    android:textColor="@color/brand_white" android:text="Create Booking" />
-                <TextView android:id="@+id/tvReserveMsg" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginTop="10dp"
-                    android:textColor="@color/brand_red" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Create Energy Reservation"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/brand_ink" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:layout_marginBottom="16dp"
+                            android:text="Reserve battery slots at a microgrid node."
+                            android:textSize="13sp"
+                            android:textColor="@color/brand_muted" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Select Microgrid Node"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/brand_muted" />
+
+                        <Spinner
+                            android:id="@+id/spinnerNodes"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/bg_chip_grey" />
+
+                        <!-- Energy Field -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:hint="Energy Amount (kWh)"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusBottomEnd="12dp">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etEnergy"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="numberDecimal"
+                                android:textColor="@color/brand_ink" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="Scheduled Time (Max 7 days ahead)"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/brand_muted" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnPickDate"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:layout_marginTop="8dp"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:text="Pick Date &amp; Time"
+                            android:textColor="@color/brand_forest"
+                            app:strokeColor="@color/brand_forest"
+                            app:strokeWidth="1dp"
+                            app:cornerRadius="10dp" />
+
+                        <TextView
+                            android:id="@+id/tvDateChosen"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="No date selected"
+                            android:textColor="@color/brand_muted"
+                            android:textSize="13sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnCreate"
+                            android:layout_width="match_parent"
+                            android:layout_height="50dp"
+                            android:layout_marginTop="20dp"
+                            android:text="Create Booking"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/brand_white"
+                            app:backgroundTint="@color/brand_forest"
+                            app:cornerRadius="12dp" />
+
+                        <TextView
+                            android:id="@+id/tvReserveMsg"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:textColor="@color/brand_red"
+                            android:textSize="13sp" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
             <!-- BOOKINGS PANEL -->
-            <LinearLayout android:id="@+id/panelBookings" android:orientation="vertical"
-                android:layout_width="match_parent" android:layout_height="wrap_content"
+            <LinearLayout
+                android:id="@+id/panelBookings"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:visibility="gone">
-                <TextView android:text="My Bookings" android:textSize="18sp"
-                    android:textStyle="bold" android:textColor="@color/brand_forest"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
-                <TextView android:id="@+id/tvBookingsEmpty" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:layout_marginTop="12dp"
-                    android:text="No bookings yet." android:textColor="@color/brand_muted" />
-                <LinearLayout android:id="@+id/containerBookings" android:orientation="vertical"
-                    android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="My Energy Bookings"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/brand_ink"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:id="@+id/tvBookingsEmpty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No bookings yet."
+                    android:textColor="@color/brand_muted"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:id="@+id/containerBookings"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
             </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

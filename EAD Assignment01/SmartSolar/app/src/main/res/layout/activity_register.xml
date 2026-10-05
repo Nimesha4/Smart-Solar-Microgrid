@@ -1,44 +1,170 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:fillViewport="true" android:background="@color/brand_bg">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/brand_bg">
 
-    <LinearLayout android:orientation="vertical"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:padding="28dp">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
 
-        <TextView android:text="Create your Prosumer account" android:textSize="22sp"
-            android:textStyle="bold" android:textColor="@color/brand_forest"
-            android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Create Account"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="@color/brand_forest" />
 
-        <TextView android:text="NIC Number" android:layout_marginTop="20dp"
-            android:textColor="@color/brand_muted" android:layout_width="wrap_content" android:layout_height="wrap_content" />
-        <EditText android:id="@+id/etNic" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:inputType="text" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="24dp"
+            android:text="Join the Smart Solar Microgrid community as a Prosumer"
+            android:textSize="14sp"
+            android:textColor="@color/brand_muted" />
 
-        <TextView android:text="Full Name" android:layout_marginTop="12dp"
-            android:textColor="@color/brand_muted" android:layout_width="wrap_content" android:layout_height="wrap_content" />
-        <EditText android:id="@+id/etName" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:inputType="textPersonName" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="4dp"
+            app:strokeColor="@color/brand_card_stroke"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="@color/brand_card_bg">
 
-        <TextView android:text="Email" android:layout_marginTop="12dp"
-            android:textColor="@color/brand_muted" android:layout_width="wrap_content" android:layout_height="wrap_content" />
-        <EditText android:id="@+id/etEmail" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:inputType="textEmailAddress" />
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="24dp">
 
-        <TextView android:text="Password" android:layout_marginTop="12dp"
-            android:textColor="@color/brand_muted" android:layout_width="wrap_content" android:layout_height="wrap_content" />
-        <EditText android:id="@+id/etPassword" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:inputType="textPassword" />
+                <!-- NIC Field -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="NIC Number"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:startIconDrawable="@drawable/ic_nic"
+                    app:startIconTint="@color/brand_muted"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusBottomEnd="12dp">
 
-        <Button android:id="@+id/btnRegister" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="20dp"
-            android:backgroundTint="@color/brand_forest"
-            android:textColor="@color/brand_white" android:text="Register" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etNic"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:textColor="@color/brand_ink"
+                        android:textSize="15sp" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView android:id="@+id/tvLogin" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:layout_marginTop="14dp"
-            android:gravity="center" android:text="Already have an account? Sign in"
-            android:textColor="@color/brand_green" android:textStyle="bold" />
+                <!-- Full Name Field -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Full Name"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:startIconDrawable="@drawable/ic_person"
+                    app:startIconTint="@color/brand_muted"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusBottomEnd="12dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPersonName"
+                        android:textColor="@color/brand_ink"
+                        android:textSize="15sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Email Field -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Email Address"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:startIconDrawable="@drawable/ic_email"
+                    app:startIconTint="@color/brand_muted"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusBottomEnd="12dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textEmailAddress"
+                        android:textColor="@color/brand_ink"
+                        android:textSize="15sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Password Field -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:hint="Password"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:startIconDrawable="@drawable/ic_lock"
+                    app:startIconTint="@color/brand_muted"
+                    app:endIconMode="password_toggle"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusBottomEnd="12dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"
+                        android:textColor="@color/brand_ink"
+                        android:textSize="15sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Register Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRegister"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="24dp"
+                    android:text="Register Account"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/brand_white"
+                    app:backgroundTint="@color/brand_forest"
+                    app:cornerRadius="12dp" />
+
+                <!-- Login Link -->
+                <TextView
+                    android:id="@+id/tvLogin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:gravity="center"
+                    android:text="Already have an account? Sign In"
+                    android:textColor="@color/brand_forest"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:padding="8dp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
     </LinearLayout>
 </ScrollView>

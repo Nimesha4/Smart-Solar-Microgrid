@@ -3,10 +3,14 @@ package com.smartsolar.app;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import java.util.*;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,7 +34,7 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
         db = new DatabaseHelper(this);
         String[] user = db.getLocalUser();
         if (user == null) { logout(); return; }
-        ((TextView) findViewById(R.id.tvWelcome)).setText("Backoffice • " + user[2]);
+        ((TextView) findViewById(R.id.tvWelcome)).setText("Admin • " + user[2]);
 
         panelUsers = findViewById(R.id.panelUsers);
         panelHubs = findViewById(R.id.panelHubs);
@@ -48,15 +52,15 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
 
         spinnerRoleFilter.setAdapter(new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item,
-                new String[]{"All", "Backoffice", "GridOperator", "Prosumer"}));
+                new String[]{"All Roles", "Backoffice", "GridOperator", "Prosumer"}));
         spinnerRoleFilter.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> p, View v, int pos, long id) { renderUsers(); }
             @Override public void onNothingSelected(AdapterView<?> p) {}
         });
-        etSearch.addTextChangedListener(new android.text.TextWatcher() {
+        etSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) { renderUsers(); }
-            @Override public void afterTextChanged(android.text.Editable s) {}
+            @Override public void afterTextChanged(Editable s) {}
         });
 
         loadUsers();
@@ -67,9 +71,12 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
         panelUsers.setVisibility(users ? View.VISIBLE : View.GONE);
         panelHubs.setVisibility(users ? View.GONE : View.VISIBLE);
         btnTabUsers.setBackgroundTintList(ColorStateList.valueOf(
-                ContextCompat.getColor(this, users ? R.color.brand_amber : R.color.chip_grey_bg)));
+                ContextCompat.getColor(this, users ? R.color.brand_forest : R.color.chip_grey_bg)));
+        btnTabUsers.setTextColor(ContextCompat.getColor(this, users ? R.color.brand_white : R.color.brand_ink));
+
         btnTabHubs.setBackgroundTintList(ColorStateList.valueOf(
-                ContextCompat.getColor(this, users ? R.color.chip_grey_bg : R.color.brand_amber)));
+                ContextCompat.getColor(this, users ? R.color.chip_grey_bg : R.color.brand_forest)));
+        btnTabHubs.setTextColor(ContextCompat.getColor(this, users ? R.color.brand_ink : R.color.brand_white));
     }
 
     // ---------- USERS ----------
@@ -82,19 +89,19 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
                 renderUsers();
             }
             @Override public void onFailure(Call<List<ApiClient.UserDto>> call, Throwable t) {
-                Toast.makeText(BackofficeDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(BackofficeDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
 
     private void renderUsers() {
         containerUsers.removeAllViews();
-        String query = etSearch.getText().toString().toLowerCase();
+        String query = etSearch.getText().toString().toLowerCase().trim();
         String role = spinnerRoleFilter.getSelectedItem() == null
-                ? "All" : spinnerRoleFilter.getSelectedItem().toString();
+                ? "All Roles" : spinnerRoleFilter.getSelectedItem().toString();
 
         for (ApiClient.UserDto u : users) {
-            boolean matchesRole = "All".equals(role) || role.equals(u.role);
+            boolean matchesRole = "All Roles".equals(role) || role.equals(u.role);
             boolean matchesQuery = query.isEmpty()
                     || u.name.toLowerCase().contains(query)
                     || u.nic.toLowerCase().contains(query)
@@ -104,20 +111,35 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
     }
 
     private View userRow(ApiClient.UserDto u) {
-        androidx.cardview.widget.CardView card = Ui.card(this);
-        LinearLayout box = Ui.col(this, 12);
+        MaterialCardView card = Ui.card(this);
+        LinearLayout box = Ui.col(this, 16);
 
-        box.addView(Ui.text(this, u.name, 16, R.color.brand_ink, true));
-        box.addView(Ui.text(this, "NIC: " + u.nic + "  •  " + u.role, 13, R.color.brand_muted, false));
-        box.addView(Ui.text(this, u.email, 13, R.color.brand_muted, false));
-        box.addView(Ui.text(this, u.isActive ? "Active" : "Deactivated", 13,
-                u.isActive ? R.color.brand_green : R.color.brand_red, true));
+        LinearLayout headerRow = Ui.row(this, 0);
+        TextView name = Ui.text(this, u.name, 16, R.color.brand_ink, true);
+        LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        name.setLayoutParams(nlp);
+        headerRow.addView(name);
 
-        Button toggle = new Button(this);
-        toggle.setText(u.isActive ? "Deactivate" : "Activate");
+        TextView statusChip = Ui.chip(this, u.isActive ? "Active" : "Deactivated",
+                u.isActive ? R.drawable.bg_chip_green : R.drawable.bg_chip_red,
+                u.isActive ? R.color.chip_green_text : R.color.chip_red_text);
+        headerRow.addView(statusChip);
+        box.addView(headerRow);
+
+        box.addView(Ui.text(this, "NIC: " + u.nic + "   •   Role: " + u.role, 13, R.color.brand_muted, false));
+        box.addView(Ui.text(this, "Email: " + u.email, 13, R.color.brand_muted, false));
+
+        MaterialButton toggle = new MaterialButton(this);
+        toggle.setText(u.isActive ? "Deactivate User" : "Activate User");
+        toggle.setCornerRadius(Ui.dp(this, 10));
         toggle.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this,
-                u.isActive ? R.color.brand_red : R.color.brand_green)));
+                u.isActive ? R.color.brand_red : R.color.brand_forest)));
         toggle.setTextColor(ContextCompat.getColor(this, R.color.brand_white));
+
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 44));
+        tlp.topMargin = Ui.dp(this, 12);
+        toggle.setLayoutParams(tlp);
         toggle.setOnClickListener(v -> setUserActive(u.nic, !u.isActive));
         box.addView(toggle);
 
@@ -135,7 +157,7 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
                         active ? "Failed to activate user." : "Failed to deactivate user.", Toast.LENGTH_LONG).show();
             }
             @Override public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(BackofficeDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(BackofficeDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -150,7 +172,7 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
                 renderHubs();
             }
             @Override public void onFailure(Call<List<ApiClient.NodeDto>> call, Throwable t) {
-                Toast.makeText(BackofficeDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(BackofficeDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -161,18 +183,35 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
     }
 
     private View hubRow(ApiClient.NodeDto n) {
-        androidx.cardview.widget.CardView card = Ui.card(this);
-        LinearLayout box = Ui.col(this, 12);
+        MaterialCardView card = Ui.card(this);
+        LinearLayout box = Ui.col(this, 16);
 
-        box.addView(Ui.text(this, n.name + (n.isActive ? "" : " (inactive)"), 16, R.color.brand_ink, true));
-        box.addView(Ui.text(this, "Capacity: " + n.capacityKwh + " kWh • Slots: " + n.availableBatterySlots,
+        LinearLayout headerRow = Ui.row(this, 0);
+        TextView name = Ui.text(this, n.name, 16, R.color.brand_ink, true);
+        LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        name.setLayoutParams(nlp);
+        headerRow.addView(name);
+
+        TextView statusChip = Ui.chip(this, n.isActive ? "Active Hub" : "Inactive",
+                n.isActive ? R.drawable.bg_chip_green : R.drawable.bg_chip_grey,
+                n.isActive ? R.color.chip_green_text : R.color.chip_grey_text);
+        headerRow.addView(statusChip);
+        box.addView(headerRow);
+
+        box.addView(Ui.text(this, "Capacity: " + n.capacityKwh + " kWh   •   Available Slots: " + n.availableBatterySlots,
                 13, R.color.brand_muted, false));
 
         if (n.isActive) {
-            Button deactivate = new Button(this);
+            MaterialButton deactivate = new MaterialButton(this);
             deactivate.setText("Deactivate Hub");
+            deactivate.setCornerRadius(Ui.dp(this, 10));
             deactivate.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.brand_red)));
             deactivate.setTextColor(ContextCompat.getColor(this, R.color.brand_white));
+
+            LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 44));
+            dlp.topMargin = Ui.dp(this, 12);
+            deactivate.setLayoutParams(dlp);
             deactivate.setOnClickListener(v -> deactivateNode(n.id));
             box.addView(deactivate);
         }
@@ -188,12 +227,11 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
                     Toast.makeText(BackofficeDashboardActivity.this, "Hub deactivated", Toast.LENGTH_SHORT).show();
                     loadNodes();
                 } else {
-                    // backend blocks this if active reservations exist (400)
                     Toast.makeText(BackofficeDashboardActivity.this, ApiClient.serverError(response), Toast.LENGTH_LONG).show();
                 }
             }
             @Override public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(BackofficeDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(BackofficeDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -223,7 +261,7 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
         ApiClient.api().createNode(node).enqueue(new Callback<ApiClient.NodeDto>() {
             @Override public void onResponse(Call<ApiClient.NodeDto> call, Response<ApiClient.NodeDto> response) {
                 if (response.isSuccessful()) {
-                    Toast.makeText(BackofficeDashboardActivity.this, "Node created", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(BackofficeDashboardActivity.this, "Node created successfully!", Toast.LENGTH_SHORT).show();
                     etName.setText(""); etCapacity.setText(""); etSlots.setText("");
                     loadNodes();
                 } else {
@@ -231,7 +269,7 @@ public class BackofficeDashboardActivity extends AppCompatActivity {
                 }
             }
             @Override public void onFailure(Call<ApiClient.NodeDto> call, Throwable t) {
-                Toast.makeText(BackofficeDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(BackofficeDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }

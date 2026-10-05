@@ -1,66 +1,180 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:background="@color/brand_bg">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/brand_bg">
 
-    <LinearLayout android:orientation="horizontal"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:background="@color/brand_forest" android:gravity="center_vertical"
-        android:padding="14dp">
-        <TextView android:id="@+id/tvWelcome" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_weight="1"
-            android:text="Grid Operator" android:textSize="18sp" android:textStyle="bold"
-            android:textColor="@color/brand_white" />
-        <Button android:id="@+id/btnScanQr" android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:layout_marginEnd="8dp"
-            android:text="Scan QR" android:backgroundTint="@color/brand_amber"
-            android:textColor="@color/brand_white" />
-        <Button android:id="@+id/btnLogout" android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:text="Logout"
-            android:backgroundTint="@color/brand_white"
-            android:textColor="@color/brand_forest" />
+    <!-- Top App Bar -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/brand_forest"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_solar_logo"
+            app:tint="@color/brand_amber" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp">
+
+            <TextView
+                android:id="@+id/tvWelcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grid Operator"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/brand_white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Operator Control Center"
+                android:textSize="12sp"
+                android:textColor="#A7F3D0" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnScanQr"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginEnd="8dp"
+            style="@style/Widget.MaterialComponents.Button"
+            android:text="Scan QR"
+            android:textSize="13sp"
+            android:textColor="@color/brand_dark_green"
+            app:backgroundTint="@color/brand_amber"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/ic_server"
+            app:iconTint="@color/brand_dark_green"
+            android:paddingStart="10dp"
+            android:paddingEnd="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogout"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:text="Logout"
+            android:textSize="13sp"
+            android:textColor="@color/brand_white"
+            app:strokeColor="@color/brand_white"
+            app:strokeWidth="1dp"
+            app:cornerRadius="8dp"
+            app:icon="@drawable/ic_logout"
+            app:iconTint="@color/brand_white"
+            android:paddingStart="10dp"
+            android:paddingEnd="12dp" />
     </LinearLayout>
 
-    <LinearLayout android:orientation="horizontal"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:padding="10dp">
-        <Button android:id="@+id/btnTabHubs" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_weight="1"
-            android:layout_marginEnd="5dp" android:text="Hubs"
-            android:backgroundTint="@color/brand_amber"
-            android:textColor="@color/brand_white" />
-        <Button android:id="@+id/btnTabReservations" android:layout_width="0dp"
-            android:layout_height="wrap_content" android:layout_weight="1"
-            android:layout_marginStart="5dp" android:text="Reservations"
-            android:backgroundTint="@color/chip_grey_bg"
-            android:textColor="@color/brand_ink" />
+    <!-- Segmented Tab Navigation -->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTabHubs"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            android:text="Microgrid Hubs"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/brand_white"
+            app:backgroundTint="@color/brand_forest"
+            app:cornerRadius="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTabReservations"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:text="Reservations"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/brand_ink"
+            app:backgroundTint="@color/chip_grey_bg"
+            app:cornerRadius="12dp" />
     </LinearLayout>
 
-    <ScrollView android:layout_width="match_parent" android:layout_height="0dp"
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:layout_weight="1">
-        <LinearLayout android:orientation="vertical"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:padding="16dp">
 
-            <LinearLayout android:id="@+id/panelHubs" android:orientation="vertical"
-                android:layout_width="match_parent" android:layout_height="wrap_content">
-                <TextView android:text="Microgrid Hubs" android:textSize="18sp"
-                    android:textStyle="bold" android:textColor="@color/brand_forest"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
-                <LinearLayout android:id="@+id/containerHubs" android:orientation="vertical"
-                    android:layout_width="match_parent" android:layout_height="wrap_content" />
-            </LinearLayout>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="24dp">
 
-            <LinearLayout android:id="@+id/panelReservations" android:orientation="vertical"
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:visibility="gone">
-                <TextView android:text="Reservations" android:textSize="18sp"
-                    android:textStyle="bold" android:textColor="@color/brand_forest"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content" />
-                <LinearLayout android:id="@+id/containerReservations"
-                    android:orientation="vertical" android:layout_width="match_parent"
+            <!-- HUBS PANEL -->
+            <LinearLayout
+                android:id="@+id/panelHubs"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Microgrid Hub Status"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/brand_ink"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:id="@+id/containerHubs"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
             </LinearLayout>
+
+            <!-- RESERVATIONS PANEL -->
+            <LinearLayout
+                android:id="@+id/panelReservations"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pending &amp; Active Reservations"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/brand_ink"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:id="@+id/containerReservations"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

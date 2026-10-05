@@ -2,10 +2,11 @@ package com.smartsolar.app;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
+import android.text.InputType;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -16,6 +17,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ApiClient.init(this);
 
         DatabaseHelper db = new DatabaseHelper(this);
         String[] saved = db.getLocalUser();
@@ -40,6 +42,34 @@ public class LoginActivity extends AppCompatActivity {
 
         ((TextView) findViewById(R.id.tvRegister)).setOnClickListener(v ->
                 startActivity(new Intent(this, RegisterActivity.class)));
+
+        findViewById(R.id.btnServerSettings).setOnClickListener(v -> showServerConfigDialog());
+    }
+
+    private void showServerConfigDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Backend Server Configuration");
+        
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
+        input.setHint("e.g. http://10.0.2.2:5199/api/");
+        input.setText(ApiClient.getBaseUrl());
+        input.setPadding(40, 30, 40, 30);
+        builder.setView(input);
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String newUrl = input.getText().toString().trim();
+            ApiClient.setBaseUrl(this, newUrl);
+            Toast.makeText(this, "Server URL updated to:\n" + ApiClient.getBaseUrl(), Toast.LENGTH_LONG).show();
+        });
+
+        builder.setNegativeButton("Reset Default", (dialog, which) -> {
+            ApiClient.setBaseUrl(this, "http://10.0.2.2:5199/api/");
+            Toast.makeText(this, "Reset to default: http://10.0.2.2:5199/api/", Toast.LENGTH_SHORT).show();
+        });
+
+        builder.setNeutralButton("Cancel", null);
+        builder.show();
     }
 
     private void login(String nic, String password, DatabaseHelper db) {
@@ -47,7 +77,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiClient.UserDto> call, Response<ApiClient.UserDto> response) {
                 if (!response.isSuccessful() || response.body() == null) {
-                    Toast.makeText(LoginActivity.this, "User not found or connection error", Toast.LENGTH_LONG).show();
+                    Toast.makeText(LoginActivity.this, "User not found or invalid response.", Toast.LENGTH_LONG).show();
                     return;
                 }
                 ApiClient.UserDto user = response.body();
@@ -66,7 +96,13 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ApiClient.UserDto> call, Throwable t) {
-                Toast.makeText(LoginActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                new AlertDialog.Builder(LoginActivity.this)
+                        .setTitle("Connection Error")
+                        .setMessage(ApiClient.getErrorMessage(t))
+                        .setPositiveButton("Retry", (dialog, which) -> login(nic, password, db))
+                        .setNegativeButton("Change Server URL", (dialog, which) -> showServerConfigDialog())
+                        .setNeutralButton("Close", null)
+                        .show();
             }
         });
     }

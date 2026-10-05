@@ -1,5 +1,7 @@
 package com.smartsolar.app;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import com.google.gson.annotations.SerializedName;
 
 import java.security.SecureRandom;
@@ -18,16 +20,36 @@ import retrofit2.http.*;
 
 public class ApiClient {
 
-    // 10.0.2.2 = your PC's localhost as seen from the Android Emulator.
-    // Physical phone on same Wi-Fi: use your PC's LAN IP, e.g. http://192.168.1.5:5199/api/
-    private static String BASE_URL = "http://10.0.2.2:5199/api/";
+    private static final String PREF_NAME = "SmartSolarApiPrefs";
+    private static final String KEY_BASE_URL = "base_url";
+    private static String DEFAULT_BASE_URL = "http://10.0.2.2:5199/api/";
+
+    private static String BASE_URL = DEFAULT_BASE_URL;
     private static Retrofit retrofit;
 
-    public static void setBaseUrl(String newUrl) {
-        if (!newUrl.endsWith("/")) {
-            newUrl += "/";
+    public static void init(Context context) {
+        if (context != null) {
+            SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            BASE_URL = prefs.getString(KEY_BASE_URL, DEFAULT_BASE_URL);
+        }
+    }
+
+    public static void setBaseUrl(Context context, String newUrl) {
+        if (newUrl == null || newUrl.trim().isEmpty()) {
+            newUrl = DEFAULT_BASE_URL;
+        } else {
+            newUrl = newUrl.trim();
+            if (!newUrl.endsWith("/")) {
+                newUrl += "/";
+            }
         }
         BASE_URL = newUrl;
+        if (context != null) {
+            context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .putString(KEY_BASE_URL, BASE_URL)
+                    .apply();
+        }
         retrofit = null;
     }
 
@@ -99,6 +121,18 @@ public class ApiClient {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /** Helper to format network failure messages into user-friendly explanations. */
+    public static String getErrorMessage(Throwable t) {
+        if (t == null || t.getMessage() == null) {
+            return "Unable to connect to server. Please check your network or server URL.";
+        }
+        String msg = t.getMessage();
+        if (msg.contains("Failed to connect") || msg.contains("Connection refused") || msg.contains("CLEARTEXT")) {
+            return "Cannot reach backend at:\n" + BASE_URL + "\n\nEnsure your ASP.NET Core backend is running.";
+        }
+        return "Network error: " + msg;
     }
 
     /** Extracts the plain-text error the ASP.NET backend returns (e.g. the 7-day / 12-hour rules). */

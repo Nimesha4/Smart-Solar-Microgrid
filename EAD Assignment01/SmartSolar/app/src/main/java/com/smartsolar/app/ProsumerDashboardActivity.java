@@ -6,11 +6,14 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.zxing.BarcodeFormat;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 import java.util.*;
@@ -59,7 +62,10 @@ public class ProsumerDashboardActivity extends AppCompatActivity {
         findViewById(R.id.btnPickDate).setOnClickListener(v -> pickDateTime());
         findViewById(R.id.btnCreate).setOnClickListener(v -> createReservation());
         findViewById(R.id.btnLogout).setOnClickListener(v -> {
-            new AlertDialog.Builder(this).setTitle("Sign out?").setPositiveButton("Yes", (d, w) -> logout())
+            new AlertDialog.Builder(this)
+                    .setTitle("Sign out?")
+                    .setMessage("Are you sure you want to log out?")
+                    .setPositiveButton("Logout", (d, w) -> logout())
                     .setNegativeButton("Cancel", null).show();
         });
 
@@ -71,9 +77,12 @@ public class ProsumerDashboardActivity extends AppCompatActivity {
         panelReserve.setVisibility(reserve ? View.VISIBLE : View.GONE);
         panelBookings.setVisibility(reserve ? View.GONE : View.VISIBLE);
         btnTabReserve.setBackgroundTintList(ColorStateList.valueOf(
-                ContextCompat.getColor(this, reserve ? R.color.brand_amber : R.color.chip_grey_bg)));
+                ContextCompat.getColor(this, reserve ? R.color.brand_forest : R.color.chip_grey_bg)));
+        btnTabReserve.setTextColor(ContextCompat.getColor(this, reserve ? R.color.brand_white : R.color.brand_ink));
+
         btnTabBookings.setBackgroundTintList(ColorStateList.valueOf(
-                ContextCompat.getColor(this, reserve ? R.color.chip_grey_bg : R.color.brand_amber)));
+                ContextCompat.getColor(this, reserve ? R.color.chip_grey_bg : R.color.brand_forest)));
+        btnTabBookings.setTextColor(ContextCompat.getColor(this, reserve ? R.color.brand_ink : R.color.brand_white));
     }
 
     // ---------- NODES ----------
@@ -88,7 +97,7 @@ public class ProsumerDashboardActivity extends AppCompatActivity {
 
                 List<String> labels = new ArrayList<>();
                 for (ApiClient.NodeDto n : nodes)
-                    labels.add(n.name + " (" + n.latitude + ", " + n.longitude + ")");
+                    labels.add(n.name + " (" + n.capacityKwh + " kWh capacity)");
                 ArrayAdapter<String> adapter = new ArrayAdapter<>(ProsumerDashboardActivity.this,
                         android.R.layout.simple_spinner_item, labels);
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -96,7 +105,7 @@ public class ProsumerDashboardActivity extends AppCompatActivity {
             }
 
             @Override public void onFailure(Call<List<ApiClient.NodeDto>> call, Throwable t) {
-                Toast.makeText(ProsumerDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ProsumerDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -121,7 +130,7 @@ public class ProsumerDashboardActivity extends AppCompatActivity {
                     tvReserveMsg.setText("Date must be in the future and within 7 days.");
                 } else {
                     tvReserveMsg.setText("");
-                    tvDateChosen.setText(DateUtils.display(DateUtils.toIso(chosen.getTime())));
+                    tvDateChosen.setText("Chosen: " + DateUtils.display(DateUtils.toIso(chosen.getTime())));
                 }
             }, 12, 0, false).show();
         }, min.get(Calendar.YEAR), min.get(Calendar.MONTH), min.get(Calendar.DAY_OF_MONTH)).show();
@@ -164,7 +173,7 @@ public class ProsumerDashboardActivity extends AppCompatActivity {
                 }
             }
             @Override public void onFailure(Call<ApiClient.ReservationDto> call, Throwable t) {
-                Toast.makeText(ProsumerDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ProsumerDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -179,7 +188,7 @@ public class ProsumerDashboardActivity extends AppCompatActivity {
                 renderBookings();
             }
             @Override public void onFailure(Call<List<ApiClient.ReservationDto>> call, Throwable t) {
-                Toast.makeText(ProsumerDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ProsumerDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -191,46 +200,65 @@ public class ProsumerDashboardActivity extends AppCompatActivity {
     }
 
     private View bookingRow(ApiClient.ReservationDto r) {
-        androidx.cardview.widget.CardView card = Ui.card(this);
-        LinearLayout box = Ui.col(this, 12);
+        MaterialCardView card = Ui.card(this);
+        LinearLayout box = Ui.col(this, 16);
 
-        box.addView(Ui.text(this, nodeName(r.microgridNodeId), 16, R.color.brand_ink, true));
-        box.addView(Ui.text(this, DateUtils.display(r.scheduledTime), 14, R.color.brand_muted, false));
-        box.addView(Ui.text(this, r.energyAmountKwh + " kWh", 14, R.color.brand_muted, false));
+        LinearLayout headerRow = Ui.row(this, 0);
+        TextView title = Ui.text(this, nodeName(r.microgridNodeId), 16, R.color.brand_ink, true);
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        title.setLayoutParams(tlp);
+        headerRow.addView(title);
 
-        TextView status = Ui.text(this, r.status, 13,
-                "Approved".equals(r.status) ? R.color.brand_green
-                        : "Pending".equals(r.status) ? R.color.brand_amber : R.color.brand_muted, true);
-        status.setBackgroundColor(ContextCompat.getColor(this,
-                "Approved".equals(r.status) ? R.color.chip_green_bg
-                        : "Pending".equals(r.status) ? R.color.chip_amber_bg : R.color.chip_grey_bg));
-        status.setPadding(Ui.dp(this, 10), Ui.dp(this, 3), Ui.dp(this, 10), Ui.dp(this, 3));
-        box.addView(status);
+        boolean isApproved = "Approved".equals(r.status);
+        boolean isPending = "Pending".equals(r.status);
+        TextView statusChip = Ui.chip(this, r.status,
+                isApproved ? R.drawable.bg_chip_green : (isPending ? R.drawable.bg_chip_amber : R.drawable.bg_chip_grey),
+                isApproved ? R.color.chip_green_text : (isPending ? R.color.chip_amber_text : R.color.chip_grey_text));
+        headerRow.addView(statusChip);
+        box.addView(headerRow);
 
-        if ("Approved".equals(r.status) && r.qrCodeData != null && !r.qrCodeData.isEmpty()) {
+        box.addView(Ui.text(this, "Scheduled: " + DateUtils.display(r.scheduledTime), 13, R.color.brand_muted, false));
+        box.addView(Ui.text(this, "Energy Amount: " + r.energyAmountKwh + " kWh", 13, R.color.brand_muted, false));
+
+        if (isApproved && r.qrCodeData != null && !r.qrCodeData.isEmpty()) {
+            LinearLayout qrBox = Ui.col(this, 12);
+            qrBox.setGravity(Gravity.CENTER_HORIZONTAL);
+            qrBox.setBackgroundResource(R.drawable.bg_chip_grey);
+
+            LinearLayout.LayoutParams qlp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            qlp.topMargin = Ui.dp(this, 12);
+            qrBox.setLayoutParams(qlp);
+
             ImageView qr = new ImageView(this);
             try {
-                Bitmap bmp = new BarcodeEncoder().encodeBitmap(r.qrCodeData, BarcodeFormat.QR_CODE, 280, 280);
+                Bitmap bmp = new BarcodeEncoder().encodeBitmap(r.qrCodeData, BarcodeFormat.QR_CODE, 320, 320);
                 qr.setImageBitmap(bmp);
             } catch (Exception ignored) {}
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(Ui.dp(this, 150), Ui.dp(this, 150));
-            lp.topMargin = Ui.dp(this, 8);
-            qr.setLayoutParams(lp);
-            box.addView(qr);
-            box.addView(Ui.text(this, r.qrCodeData, 11, R.color.brand_muted, false));
+            LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(Ui.dp(this, 160), Ui.dp(this, 160));
+            qr.setLayoutParams(ip);
+            qrBox.addView(qr);
+
+            TextView qrText = Ui.text(this, "Present QR code to Operator at Node", 12, R.color.brand_muted, true);
+            qrText.setGravity(Gravity.CENTER);
+            qrBox.addView(qrText);
+
+            box.addView(qrBox);
         }
 
-        Button cancel = new Button(this);
+        MaterialButton cancel = new MaterialButton(this);
         cancel.setText("Cancel Booking");
+        cancel.setCornerRadius(Ui.dp(this, 10));
         cancel.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.brand_red)));
         cancel.setTextColor(ContextCompat.getColor(this, R.color.brand_white));
+
         LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        clp.topMargin = Ui.dp(this, 8);
+                LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(this, 44));
+        clp.topMargin = Ui.dp(this, 12);
         cancel.setLayoutParams(clp);
         cancel.setOnClickListener(v -> new AlertDialog.Builder(this)
                 .setTitle("Cancel booking?")
-                .setMessage("Cancellations require at least 12 hours notice.")
+                .setMessage("Cancellations require at least 12 hours notice prior to scheduled time.")
                 .setPositiveButton("Yes, cancel", (d, w) -> cancelReservation(r.id))
                 .setNegativeButton("Back", null).show());
         box.addView(cancel);
@@ -250,7 +278,7 @@ public class ProsumerDashboardActivity extends AppCompatActivity {
                 }
             }
             @Override public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(ProsumerDashboardActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ProsumerDashboardActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
             }
         });
     }
