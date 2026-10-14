@@ -1,0 +1,28 @@
+## Visual Studio / JetBrains Files
+.vs/
+.idea/
+*.user
+*.suo
+
+## Build Outputs & Caches
+bin/
+obj/
+out/
+publish/
+
+## Git & Version Control
+.git/
+.gitignore
+
+## Environment & Local Settings
+appsettings.Development.json
+appsettings.Local.json
+*.env
+
+## OS Generated Files
+.DS_Store
+Thumbs.db
+
+## Documentation & Logs
+*.md
+*.log

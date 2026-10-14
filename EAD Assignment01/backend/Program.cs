@@ -3,7 +3,6 @@ using SmartSolar.Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.Configure<SmartSolarDatabaseSettings>(
     builder.Configuration.GetSection("SmartSolarDatabase"));
 
@@ -12,35 +11,31 @@ builder.Services.AddSingleton<MicrogridNodeService>();
 builder.Services.AddSingleton<ReservationService>();
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-// Add CORS to allow the React Frontend to communicate
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        });
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Render terminates HTTPS in front of the container, so no redirection here.
+// Only redirect locally if you want to.
 if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-else
 {
     app.UseHttpsRedirection();
 }
-app.UseCors("AllowAll");
 
+// Exposes /openapi/v1.json in all environments (JSON only, no UI).
+// Wrap in IsDevelopment() again if you don't want it public.
+app.MapOpenApi();
+
+app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
+
+app.MapGet("/health", () => "ok");
 
 app.Run();

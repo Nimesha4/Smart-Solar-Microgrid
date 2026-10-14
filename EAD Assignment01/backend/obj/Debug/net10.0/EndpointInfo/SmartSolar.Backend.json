@@ -16,6 +16,25 @@
     }
   ],
   "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "SmartSolar.Backend"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Nodes": {
       "get": {
         "tags": [
@@ -772,6 +791,9 @@
     }
   },
   "tags": [
+    {
+      "name": "SmartSolar.Backend"
+    },
     {
       "name": "Nodes"
     },
