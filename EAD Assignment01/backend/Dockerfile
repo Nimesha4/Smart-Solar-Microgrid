@@ -1,11 +1,11 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY SmartSolar.Backend/*.csproj SmartSolar.Backend/
-RUN dotnet restore SmartSolar.Backend/SmartSolar.Backend.csproj
+COPY *.csproj ./
+RUN dotnet restore
 COPY . .
-RUN dotnet publish SmartSolar.Backend/SmartSolar.Backend.csproj -c Release -o /app
+RUN dotnet publish -c Release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app .
 ENV ASPNETCORE_URLS=http://+:10000
