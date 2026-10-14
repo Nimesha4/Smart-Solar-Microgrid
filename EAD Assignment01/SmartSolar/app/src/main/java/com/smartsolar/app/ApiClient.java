@@ -22,21 +22,21 @@ public class ApiClient {
 
     private static final String PREF_NAME = "SmartSolarApiPrefs";
     private static final String KEY_BASE_URL = "base_url";
-    private static String DEFAULT_BASE_URL = "http://10.0.2.2:5199/api/";
+    public static final String RENDER_BASE_URL = "https://smart-solar-microgrid.onrender.com/api/";
 
-    private static String BASE_URL = DEFAULT_BASE_URL;
+    private static String BASE_URL = RENDER_BASE_URL;
     private static Retrofit retrofit;
 
     public static void init(Context context) {
         if (context != null) {
             SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-            BASE_URL = prefs.getString(KEY_BASE_URL, DEFAULT_BASE_URL);
+            BASE_URL = prefs.getString(KEY_BASE_URL, RENDER_BASE_URL);
         }
     }
 
     public static void setBaseUrl(Context context, String newUrl) {
         if (newUrl == null || newUrl.trim().isEmpty()) {
-            newUrl = DEFAULT_BASE_URL;
+            newUrl = RENDER_BASE_URL;
         } else {
             newUrl = newUrl.trim();
             if (!newUrl.endsWith("/")) {
@@ -59,7 +59,7 @@ public class ApiClient {
 
     public static ApiService api() {
         if (retrofit == null) {
-            OkHttpClient okHttpClient = getUnsafeOkHttpClient();
+            OkHttpClient okHttpClient = getOkHttpClient();
             retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .client(okHttpClient)
@@ -70,12 +70,10 @@ public class ApiClient {
     }
 
     /**
-     * Configures an OkHttpClient that:
-     * 1) Accepts self-signed SSL certificates for HTTPS local dev (e.g. https://10.0.2.2:7117/api/)
-     * 2) Intercepts redirects and rewrites 'localhost' to '10.0.2.2' if needed
-     * 3) Sets 30-second timeouts to avoid quick timeouts during backend startup
+     * Configures OkHttpClient with SSL support, host redirect interception, and
+     * 60-second timeouts to accommodate Render cloud backend cold-starts.
      */
-    private static OkHttpClient getUnsafeOkHttpClient() {
+    private static OkHttpClient getOkHttpClient() {
         try {
             final TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
@@ -98,9 +96,9 @@ public class ApiClient {
             builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
             builder.hostnameVerifier((hostname, session) -> true);
 
-            builder.connectTimeout(30, TimeUnit.SECONDS);
-            builder.readTimeout(30, TimeUnit.SECONDS);
-            builder.writeTimeout(30, TimeUnit.SECONDS);
+            builder.connectTimeout(60, TimeUnit.SECONDS);
+            builder.readTimeout(60, TimeUnit.SECONDS);
+            builder.writeTimeout(60, TimeUnit.SECONDS);
 
             builder.addNetworkInterceptor(chain -> {
                 Request request = chain.request();
@@ -126,11 +124,11 @@ public class ApiClient {
     /** Helper to format network failure messages into user-friendly explanations. */
     public static String getErrorMessage(Throwable t) {
         if (t == null || t.getMessage() == null) {
-            return "Unable to connect to server. Please check your network or server URL.";
+            return "Unable to connect to server. Please check your internet connection.";
         }
         String msg = t.getMessage();
-        if (msg.contains("Failed to connect") || msg.contains("Connection refused") || msg.contains("CLEARTEXT")) {
-            return "Cannot reach backend at:\n" + BASE_URL + "\n\nEnsure your ASP.NET Core backend is running.";
+        if (msg.contains("Failed to connect") || msg.contains("Connection refused") || msg.contains("timeout") || msg.contains("Unable to resolve host")) {
+            return "Cannot reach backend at:\n" + BASE_URL + "\n\nIf using Render, the backend may be spinning up from cold-start. Please try again in 30 seconds.";
         }
         return "Network error: " + msg;
     }

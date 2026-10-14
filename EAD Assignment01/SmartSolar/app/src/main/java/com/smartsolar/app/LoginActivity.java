@@ -52,7 +52,7 @@ public class LoginActivity extends AppCompatActivity {
         
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
-        input.setHint("e.g. http://10.0.2.2:5199/api/");
+        input.setHint("e.g. " + ApiClient.RENDER_BASE_URL);
         input.setText(ApiClient.getBaseUrl());
         input.setPadding(40, 30, 40, 30);
         builder.setView(input);
@@ -64,8 +64,8 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         builder.setNegativeButton("Reset Default", (dialog, which) -> {
-            ApiClient.setBaseUrl(this, "http://10.0.2.2:5199/api/");
-            Toast.makeText(this, "Reset to default: http://10.0.2.2:5199/api/", Toast.LENGTH_SHORT).show();
+            ApiClient.setBaseUrl(this, ApiClient.RENDER_BASE_URL);
+            Toast.makeText(this, "Reset to default:\n" + ApiClient.RENDER_BASE_URL, Toast.LENGTH_SHORT).show();
         });
 
         builder.setNeutralButton("Cancel", null);
