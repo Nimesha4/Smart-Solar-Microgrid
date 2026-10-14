@@ -1,0 +1,24 @@
+## Build and Output Directories
+**/bin/
+**/obj/
+**/out/
+
+## Visual Studio Files
+**/.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.userprefs
+
+## JetBrains / Android Studio (.idea)
+**/.idea/
+
+## Environment & Local Settings
+**/appsettings.Development.json
+**/appsettings.Local.json
+*.env
+
+## OS Generated Files
+.DS_Store
+Thumbs.db

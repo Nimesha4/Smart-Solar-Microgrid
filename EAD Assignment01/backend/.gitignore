@@ -1,0 +1,42 @@
+## Build and Output Directories
+bin/
+obj/
+out/
+[Bb]in/
+[Oo]bj/
+
+## Visual Studio Files
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.userprefs
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Environment & Sensitive Local Settings
+appsettings.Development.json
+appsettings.Local.json
+*.env
+
+## Packages / Dependencies
+*.nupkg
+**/packages/*
+!**/packages/build/
+project.lock.json
+project.assets.json
+
+## Crash dumps and logs
+*.log
+*.ldf
+*.mdf
+
+## OS Generated Files
+.DS_Store
+Thumbs.db
