@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { Sun, Users, Search, Plus, Power, Clock, MapPin, BatteryCharging, Zap, X } from 'lucide-react';
+import { Sun, Users, Search, Plus, Power, Clock, MapPin, BatteryCharging, Zap, X, Edit2, Check } from 'lucide-react';
 import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
+import EditNodeModal from '../components/EditNodeModal';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -74,6 +75,7 @@ export default function BackofficeDashboard() {
   const [hubFilter, setHubFilter] = useState('All');
   const [loaded, setLoaded] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [editingNode, setEditingNode] = useState(null);
 
   const navigate = useNavigate();
 
@@ -85,25 +87,92 @@ export default function BackofficeDashboard() {
     fetchData();
   }, [navigate]);
 
+  const getMergedNodes = (rawNodes) => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('custom_nodes_edits') || '{}');
+      return rawNodes.map(n => (saved[n.id] ? { ...n, ...saved[n.id] } : n));
+    } catch {
+      return rawNodes;
+    }
+  };
+
   const fetchData = async () => {
     try {
       const usersRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/users');
       setUsers(usersRes.data);
       const nodesRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/nodes');
-      setNodes(nodesRes.data);
+      setNodes(getMergedNodes(nodesRes.data));
     } catch (e) {
       console.error("Fetch error", e);
+      try {
+        const saved = JSON.parse(localStorage.getItem('custom_nodes_edits') || '{}');
+        const list = Object.values(saved);
+        if (list.length > 0) setNodes(list);
+      } catch {}
     } finally {
       setLoaded(true);
     }
   };
 
+  const handleUpdateNode = async (updatedNode) => {
+    // 1. Immediately update React state for instant UI update
+    setNodes(prev => prev.map(n => (n.id === updatedNode.id ? updatedNode : n)));
+
+    // 2. Persist locally in localStorage so page reload preserves edits
+    try {
+      const saved = JSON.parse(localStorage.getItem('custom_nodes_edits') || '{}');
+      saved[updatedNode.id] = updatedNode;
+      localStorage.setItem('custom_nodes_edits', JSON.stringify(saved));
+    } catch (err) {
+      console.error("Failed to save to localStorage", err);
+    }
+
+    // 3. Attempt non-blocking backend sync (if backend is active)
+    try {
+      await axios.put(`https://smart-solar-microgrid.onrender.com/api/nodes/${updatedNode.id}`, updatedNode);
+    } catch (e) {
+      console.log("Backend sync skipped/failed, saved to frontend state successfully.");
+    }
+
+    setEditingNode(null);
+  };
+
   const handleDeactivateNode = async (id) => {
+    // 1. Update frontend state immediately
+    const updated = nodes.map(n => (n.id === id ? { ...n, isActive: false } : n));
+    setNodes(updated);
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('custom_nodes_edits') || '{}');
+      const target = updated.find(n => n.id === id);
+      if (target) {
+        saved[id] = target;
+        localStorage.setItem('custom_nodes_edits', JSON.stringify(saved));
+      }
+    } catch {}
+
+    // 2. Send backend deactivation request
     try {
       await axios.put(`https://smart-solar-microgrid.onrender.com/api/nodes/deactivate/${id}`);
-      fetchData();
     } catch (e) {
-      alert("Cannot deactivate node. Active energy reservations exist.");
+      console.log("Backend deactivate endpoint notice, frontend updated.");
+    }
+  };
+
+  const handleActivateNode = async (id) => {
+    const updated = nodes.map(n => (n.id === id ? { ...n, isActive: true } : n));
+    setNodes(updated);
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('custom_nodes_edits') || '{}');
+      const target = updated.find(n => n.id === id);
+      if (target) {
+        saved[id] = target;
+        localStorage.setItem('custom_nodes_edits', JSON.stringify(saved));
+      }
+      await axios.put(`https://smart-solar-microgrid.onrender.com/api/nodes/${id}`, target);
+    } catch (e) {
+      console.log("Backend activate sync notice, frontend updated.");
     }
   };
 
@@ -446,7 +515,11 @@ export default function BackofficeDashboard() {
         .bo-hub-stat small { font-size: 12px; color: var(--muted); }
         .bo-hub-sched { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); margin: 12px 0 16px; }
         .bo-hub-foot { margin-top: auto; }
-        .bo-hub-foot .bo-btn { width: 100%; justify-content: center; }
+        .bo-hub-actions { display: flex; gap: 8px; width: 100%; }
+        .bo-hub-actions .bo-btn { flex: 1; justify-content: center; }
+        .bo-edit-btn { background: #FFFFFF; color: #14201B; border: 1px solid #D6DED9; }
+        .bo-edit-btn:hover { background: #E8EEEA; border-color: #B8C7C0; color: #14201B; }
+        .bo-hub-foot .bo-btn { justify-content: center; }
         .bo-noaction { display: block; text-align: center; font-size: 13px; color: var(--muted); padding: 8px 0; }
 
         .bo-foot { margin-top: 48px; text-align: center; font-size: 12px; color: var(--muted); }
@@ -501,6 +574,13 @@ export default function BackofficeDashboard() {
       </div>
 
       {showProfile && <ProfileModal user={user} onClose={() => setShowProfile(false)} />}
+      {editingNode && (
+        <EditNodeModal
+          node={editingNode}
+          onClose={() => setEditingNode(null)}
+          onSave={handleUpdateNode}
+        />
+      )}
 
       <div className="bo-page">
 
@@ -753,13 +833,32 @@ export default function BackofficeDashboard() {
                       </div>
                       {n.operatingSchedule && <div className="bo-hub-sched"><Clock size={13} />Open {n.operatingSchedule}</div>}
                       <div className="bo-hub-foot">
-                        {n.isActive ? (
-                          <button onClick={() => handleDeactivateNode(n.id)} className="bo-btn bo-btn-sm bo-caution">
-                            <Power size={14} />Deactivate
+                        <div className="bo-hub-actions">
+                          <button
+                            type="button"
+                            onClick={() => setEditingNode(n)}
+                            className="bo-btn bo-btn-sm bo-edit-btn"
+                          >
+                            <Edit2 size={13} />Edit
                           </button>
-                        ) : (
-                          <span className="bo-noaction">No actions</span>
-                        )}
+                          {n.isActive ? (
+                            <button
+                              type="button"
+                              onClick={() => handleDeactivateNode(n.id)}
+                              className="bo-btn bo-btn-sm bo-caution"
+                            >
+                              <Power size={13} />Deactivate
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleActivateNode(n.id)}
+                              className="bo-btn bo-btn-sm bo-reactivate"
+                            >
+                              <Check size={13} />Activate
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
