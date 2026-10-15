@@ -105,21 +105,32 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
+      
       const newUser = {
-        nic: nic,
-        name: name,
-        email: email,
-        passwordHash: password, // In a real app, hash this before sending or on backend
-        role: role, // Selected role
-        isActive: true
+        nic: nic.trim(),
+        name: name.trim(),
+        email: email.trim(),
+        password: password,
+        role: "Prosumer"
       };
+
 
       await axios.post('https://smart-solar-microgrid.onrender.com/api/users', newUser);
       alert("Registration successful! You can now log in.");
       navigate('/login');
+    
     } catch (err) {
-      setError("Registration failed. NIC may already exist.");
+      console.error("Registration error:", err.response?.data || err.message);
+
+      setError(
+        err.response?.data?.title ||
+        err.response?.data?.message ||
+        (err.response?.status === 409
+          ? "This NIC is already registered."
+          : "Registration failed. Please check your details and try again.")
+      );
     }
+
   };
 
   const roles = [
