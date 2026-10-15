@@ -33,10 +33,41 @@ namespace SmartSolar.Backend.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(User newUser)
+        public async Task<IActionResult> Post(UserRegisterDto newUser)
         {
-            await _userService.CreateAsync(newUser);
-            return CreatedAtAction(nameof(Get), new { nic = newUser.Nic }, newUser);
+            // hash the password before saving
+            var existing = await _userService.GetAsync(newUser.Nic);
+            if (existing is not null)
+                return Conflict("User with this NIC already exists.");
+
+            var user = new User
+            {
+                Nic = newUser.Nic,
+                Name = newUser.Name,
+                Role = newUser.Role,
+                Email = newUser.Email,
+                PasswordHash = PasswordHasher.HashPassword(newUser.Password),
+                IsActive = true
+            };
+
+            await _userService.CreateAsync(user);
+            return CreatedAtAction(nameof(Get), new { nic = user.Nic }, user);
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(UserLoginDto login)
+        {
+            var user = await _userService.GetAsync(login.Nic);
+            if (user is null)
+                return Unauthorized();
+
+            if (!PasswordHasher.VerifyHashedPassword(user.PasswordHash, login.Password))
+                return Unauthorized();
+
+            if (!user.IsActive)
+                return Forbid();
+
+            return Ok(new { message = "Login successful", nic = user.Nic, role = user.Role });
         }
 
         [HttpPut("{nic}")]
