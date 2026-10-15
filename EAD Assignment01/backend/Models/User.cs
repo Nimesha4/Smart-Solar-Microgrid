@@ -1,5 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
 namespace SmartSolar.Backend.Models
 {
@@ -16,7 +17,9 @@ namespace SmartSolar.Backend.Models
         public string Role { get; set; } = null!;
 
         public string Email { get; set; } = null!;
-        
+
+        // JsonIgnore guarantees PasswordHash is never exposed in REST API responses
+        [JsonIgnore]
         public string PasswordHash { get; set; } = null!;
 
         // IsActive helps deactivate Prosumers

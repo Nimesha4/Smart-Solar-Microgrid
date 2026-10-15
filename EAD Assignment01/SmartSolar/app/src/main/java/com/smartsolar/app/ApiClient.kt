@@ -18,12 +18,9 @@ object ApiClient {
     private const val PREF_NAME = "SmartSolarApiPrefs"
     private const val KEY_BASE_URL = "base_url"
 
-    // Base URL for Android Emulator:
+    // Default Base URL pointing to the Render backend deployment
     @JvmField
-    val RENDER_BASE_URL: String = "http://10.0.2.2:8080/"
-
-    // Base URL for Physical Phone (replace with your PC's actual LAN IP):
-    // private const val BASE_URL = "http://10.231.132.118:8080/"
+    val RENDER_BASE_URL: String = "https://smart-solar-microgrid.onrender.com/"
 
     @get:JvmStatic
     var baseUrl: String = RENDER_BASE_URL
@@ -61,9 +58,9 @@ object ApiClient {
 
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
     private var retrofitInstance: Retrofit? = null
@@ -88,13 +85,35 @@ object ApiClient {
     @JvmStatic
     fun api(): ApiService = apiService
 
-    // Models matching ASP.NET JSON output exactly
+    // ---- DTO Models matching ASP.NET JSON output exactly ----
+
+    class LoginRequestDto(
+        @JvmField @SerializedName("nic") var nic: String = "",
+        @JvmField @SerializedName("password") var password: String = ""
+    )
+
+    class LoginResponseDto {
+        @JvmField @SerializedName("message") var message: String? = null
+        @JvmField @SerializedName("nic") var nic: String? = null
+        @JvmField @SerializedName("name") var name: String? = null
+        @JvmField @SerializedName("email") var email: String? = null
+        @JvmField @SerializedName("role") var role: String? = null
+        @JvmField @SerializedName("isActive") var isActive: Boolean = true
+    }
+
+    class UserRegisterDto {
+        @JvmField @SerializedName("nic") var nic: String? = null
+        @JvmField @SerializedName("name") var name: String? = null
+        @JvmField @SerializedName("email") var email: String? = null
+        @JvmField @SerializedName("password") var password: String? = null
+        @JvmField @SerializedName("role") var role: String = "Prosumer"
+    }
+
     class UserDto {
         @JvmField @SerializedName("nic") var nic: String? = null
         @JvmField @SerializedName("name") var name: String? = null
         @JvmField @SerializedName("role") var role: String? = null
         @JvmField @SerializedName("email") var email: String? = null
-        @JvmField @SerializedName("passwordHash") var passwordHash: String? = null
         @JvmField @SerializedName("isActive") var isActive: Boolean = true
     }
 
@@ -133,7 +152,7 @@ object ApiClient {
     fun getErrorMessage(t: Throwable?): String {
         val msg = t?.message ?: return "Unable to connect to server."
         if (msg.contains("Failed to connect") || msg.contains("Connection refused") || msg.contains("CLEARTEXT")) {
-            return "Cannot reach backend at:\n$baseUrl\n\nEnsure your IIS ASP.NET Core backend is running on port 8080."
+            return "Cannot reach backend at:\n$baseUrl\n\nEnsure your ASP.NET Core backend is running."
         }
         return "Network error: $msg"
     }

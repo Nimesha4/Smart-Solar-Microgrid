@@ -10,6 +10,13 @@ import retrofit2.http.*
  */
 interface ApiService {
 
+    // ---- Authentication Endpoints ----
+    @POST("api/users/login")
+    fun login(@Body loginRequest: ApiClient.LoginRequestDto): Call<ApiClient.LoginResponseDto>
+
+    @POST("api/users")
+    fun registerUser(@Body registerRequest: ApiClient.UserRegisterDto): Call<ApiClient.UserDto>
+
     // ---- Generic Items Endpoints (Kotlin Coroutines) ----
     @GET("api/items")
     suspend fun getItems(): Response<List<ItemDto>>
@@ -21,50 +28,50 @@ interface ApiService {
     suspend fun createItem(@Body item: ItemDto): Response<ItemDto>
 
     // ---- Users Endpoints (Java Call<T>) ----
-    @GET("users/{nic}")
+    @GET("api/users/{nic}")
     fun getUser(@Path("nic") nic: String): Call<ApiClient.UserDto>
 
-    @GET("users")
+    @GET("api/users")
     fun getUsers(): Call<List<ApiClient.UserDto>>
 
-    @POST("users")
-    fun createUser(@Body user: ApiClient.UserDto): Call<ApiClient.UserDto>
+    @POST("api/users")
+    fun createUser(@Body user: ApiClient.UserRegisterDto): Call<ApiClient.UserDto>
 
-    @PUT("users/deactivate/{nic}")
+    @PUT("api/users/deactivate/{nic}")
     fun deactivateUser(@Path("nic") nic: String): Call<Void>
 
-    @PUT("users/activate/{nic}")
+    @PUT("api/users/activate/{nic}")
     fun activateUser(@Path("nic") nic: String): Call<Void>
 
     // ---- Microgrid Nodes Endpoints (Java Call<T>) ----
-    @GET("nodes")
+    @GET("api/nodes")
     fun getNodes(): Call<List<ApiClient.NodeDto>>
 
-    @POST("nodes")
+    @POST("api/nodes")
     fun createNode(@Body node: ApiClient.NodeDto): Call<ApiClient.NodeDto>
 
-    @PUT("nodes/{id}")
+    @PUT("api/nodes/{id}")
     fun updateNode(@Path("id") id: String, @Body node: ApiClient.NodeDto): Call<Void>
 
-    @PUT("nodes/deactivate/{id}")
+    @PUT("api/nodes/deactivate/{id}")
     fun deactivateNode(@Path("id") id: String): Call<Void>
 
     // ---- Reservations Endpoints (Java Call<T>) ----
-    @GET("reservations")
+    @GET("api/reservations")
     fun getReservations(): Call<List<ApiClient.ReservationDto>>
 
-    @GET("reservations/prosumer/{nic}")
+    @GET("api/reservations/prosumer/{nic}")
     fun getReservationsByProsumer(@Path("nic") nic: String): Call<List<ApiClient.ReservationDto>>
 
-    @GET("reservations/{id}")
+    @GET("api/reservations/{id}")
     fun getReservation(@Path("id") id: String): Call<ApiClient.ReservationDto>
 
-    @POST("reservations")
+    @POST("api/reservations")
     fun createReservation(@Body r: ApiClient.ReservationDto): Call<ApiClient.ReservationDto>
 
-    @PUT("reservations/approve/{id}")
+    @PUT("api/reservations/approve/{id}")
     fun approveReservation(@Path("id") id: String): Call<ApiClient.ReservationDto>
 
-    @DELETE("reservations/{id}")
+    @DELETE("api/reservations/{id}")
     fun deleteReservation(@Path("id") id: String): Call<Void>
 }

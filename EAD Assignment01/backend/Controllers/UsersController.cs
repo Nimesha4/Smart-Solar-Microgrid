@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartSolar.Backend.Models;
 using SmartSolar.Backend.Services;
@@ -33,18 +34,26 @@ namespace SmartSolar.Backend.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(UserRegisterDto newUser)
+        public async Task<IActionResult> Post([FromBody] UserRegisterDto newUser)
         {
-            // hash the password before saving
-            var existing = await _userService.GetAsync(newUser.Nic);
-            if (existing is not null)
-                return Conflict("User with this NIC already exists.");
+            if (newUser == null ||
+                string.IsNullOrWhiteSpace(newUser.Nic) ||
+                string.IsNullOrWhiteSpace(newUser.Password))
+            {
+                return BadRequest(new { message = "NIC and password are required." });
+            }
 
+            var cleanNic = newUser.Nic.Trim();
+            var existing = await _userService.GetAsync(cleanNic);
+            if (existing is not null)
+                return Conflict(new { message = "User with this NIC already exists." });
+
+            // Public registration enforces Prosumer role on the server
             var user = new User
             {
-                Nic = newUser.Nic,
+                Nic = cleanNic,
                 Name = newUser.Name,
-                Role = newUser.Role,
+                Role = "Prosumer",
                 Email = newUser.Email,
                 PasswordHash = PasswordHasher.HashPassword(newUser.Password),
                 IsActive = true
@@ -52,19 +61,18 @@ namespace SmartSolar.Backend.Controllers
 
             await _userService.CreateAsync(user);
             return CreatedAtAction(
-    nameof(Get),
-    new { nic = user.Nic },
-    new
-    {
-        nic = user.Nic,
-        name = user.Name,
-        email = user.Email,
-        role = user.Role,
-        isActive = user.IsActive
-    }
-);
+                nameof(Get),
+                new { nic = user.Nic },
+                new
+                {
+                    nic = user.Nic,
+                    name = user.Name,
+                    email = user.Email,
+                    role = user.Role,
+                    isActive = user.IsActive
+                }
+            );
         }
-
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto login)
@@ -118,7 +126,13 @@ namespace SmartSolar.Backend.Controllers
             if (user is null)
                 return NotFound();
 
+            // Preserve existing password hash and NIC
             updatedUser.Nic = user.Nic;
+            if (string.IsNullOrEmpty(updatedUser.PasswordHash))
+            {
+                updatedUser.PasswordHash = user.PasswordHash;
+            }
+
             await _userService.UpdateAsync(nic, updatedUser);
             return NoContent();
         }

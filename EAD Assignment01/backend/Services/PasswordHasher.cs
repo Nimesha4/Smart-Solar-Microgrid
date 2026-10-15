@@ -1,9 +1,9 @@
 using System;
 using System.Security.Cryptography;
-using Microsoft.AspNetCore.Http;
+
 namespace SmartSolar.Backend.Services
 {
-    // Simple PBKDF2-based password hasher. Produces a string containing:
+    // PBKDF2-based password hasher. Produces a string containing:
     // {iterations}.{base64Salt}.{base64Subkey}
     public static class PasswordHasher
     {
@@ -13,33 +13,43 @@ namespace SmartSolar.Backend.Services
 
         public static string HashPassword(string password)
         {
-            using var rng = RandomNumberGenerator.Create();
-            var salt = new byte[SaltSize];
-            rng.GetBytes(salt);
-
-            using var deriveBytes = new Rfc2898DeriveBytes(password, salt, IterationCount, HashAlgorithmName.SHA256);
-            var subkey = deriveBytes.GetBytes(SubkeySize);
+            var salt = RandomNumberGenerator.GetBytes(SaltSize);
+            var subkey = Rfc2898DeriveBytes.Pbkdf2(password, salt, IterationCount, HashAlgorithmName.SHA256, SubkeySize);
 
             return $"{IterationCount}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(subkey)}";
         }
 
         public static bool VerifyHashedPassword(string hashedPassword, string providedPassword)
         {
-            if (string.IsNullOrEmpty(hashedPassword))
+            if (string.IsNullOrEmpty(hashedPassword) || string.IsNullOrEmpty(providedPassword))
                 return false;
 
             var parts = hashedPassword.Split('.', 3);
             if (parts.Length != 3)
-                return false;
+            {
+                // Fallback for unmigrated legacy plain-text password database records
+                return CryptographicOperations.FixedTimeEquals(
+                    System.Text.Encoding.UTF8.GetBytes(hashedPassword),
+                    System.Text.Encoding.UTF8.GetBytes(providedPassword));
+            }
 
             if (!int.TryParse(parts[0], out var iterations))
                 return false;
 
-            var salt = Convert.FromBase64String(parts[1]);
-            var expectedSubkey = Convert.FromBase64String(parts[2]);
+            byte[] salt;
+            byte[] expectedSubkey;
 
-            using var deriveBytes = new Rfc2898DeriveBytes(providedPassword, salt, iterations, HashAlgorithmName.SHA256);
-            var actualSubkey = deriveBytes.GetBytes(expectedSubkey.Length);
+            try
+            {
+                salt = Convert.FromBase64String(parts[1]);
+                expectedSubkey = Convert.FromBase64String(parts[2]);
+            }
+            catch
+            {
+                return false;
+            }
+
+            var actualSubkey = Rfc2898DeriveBytes.Pbkdf2(providedPassword, salt, iterations, HashAlgorithmName.SHA256, expectedSubkey.Length);
 
             return CryptographicOperations.FixedTimeEquals(actualSubkey, expectedSubkey);
         }

@@ -31,28 +31,30 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            ApiClient.UserDto newUser = new ApiClient.UserDto();
+            ApiClient.UserRegisterDto newUser = new ApiClient.UserRegisterDto();
             newUser.nic = nic;
             newUser.name = name;
             newUser.email = email;
-            newUser.passwordHash = password;
-            newUser.role = "Prosumer";   // default role for self-registration (same as web)
-            newUser.isActive = true;
+            newUser.password = password; // Passed to backend for PBKDF2 hashing
+            newUser.role = "Prosumer";   // Enforce Prosumer role for self-registration
 
-            ApiClient.api().createUser(newUser).enqueue(new Callback<ApiClient.UserDto>() {
+            ApiClient.api().registerUser(newUser).enqueue(new Callback<ApiClient.UserDto>() {
                 @Override
                 public void onResponse(Call<ApiClient.UserDto> call, Response<ApiClient.UserDto> response) {
                     if (response.isSuccessful()) {
                         Toast.makeText(RegisterActivity.this, "Registration successful! Please sign in.", Toast.LENGTH_LONG).show();
                         finish();
+                    } else if (response.code() == 409) {
+                        Toast.makeText(RegisterActivity.this, "User with this NIC already exists.", Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(RegisterActivity.this, "Registration failed. NIC may already exist.", Toast.LENGTH_LONG).show();
+                        String error = ApiClient.serverError(response);
+                        Toast.makeText(RegisterActivity.this, "Registration failed: " + error, Toast.LENGTH_LONG).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ApiClient.UserDto> call, Throwable t) {
-                    Toast.makeText(RegisterActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(RegisterActivity.this, ApiClient.getErrorMessage(t), Toast.LENGTH_LONG).show();
                 }
             });
         });
