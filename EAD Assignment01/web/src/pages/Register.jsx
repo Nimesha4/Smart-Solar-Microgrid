@@ -114,7 +114,7 @@ export default function Register() {
         isActive: true
       };
 
-      await axios.post('http://localhost:5199/api/users', newUser);
+      await axios.post('http://localhost:8080/api/users', newUser);
       alert("Registration successful! You can now log in.");
       navigate('/login');
     } catch (err) {

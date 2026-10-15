@@ -189,10 +189,10 @@ export default function GridOperatorDashboard() {
 
   const fetchData = async () => {
     try {
-      const nodesRes = await axios.get('http://localhost:5199/api/nodes');
+      const nodesRes = await axios.get('http://localhost:8080/api/nodes');
       setNodes(nodesRes.data);
 
-      const resRes = await axios.get('http://localhost:5199/api/reservations');
+      const resRes = await axios.get('http://localhost:8080/api/reservations');
       setReservations(resRes.data);
 
       // Initialize input states for nodes
@@ -215,7 +215,7 @@ export default function GridOperatorDashboard() {
         ...node,
         availableBatterySlots: parseInt(slotInputs[node.id])
       };
-      await axios.put(`http://localhost:5199/api/nodes/${node.id}`, updatedNode);
+      await axios.put(`http://localhost:8080/api/nodes/${node.id}`, updatedNode);
       alert(`Successfully updated battery slots for ${node.name}`);
       fetchData();
     } catch (e) {
@@ -225,7 +225,7 @@ export default function GridOperatorDashboard() {
 
   const handleApproveReservation = async (id) => {
     try {
-      await axios.put(`http://localhost:5199/api/reservations/approve/${id}`);
+      await axios.put(`http://localhost:8080/api/reservations/approve/${id}`);
       fetchData();
     } catch (e) {
       alert("Failed to approve reservation");

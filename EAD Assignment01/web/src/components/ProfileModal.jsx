@@ -42,7 +42,7 @@ export default function ProfileModal({ user, onClose }) {
         passwordHash: finalPassword
       };
 
-      await axios.put(`http://localhost:5199/api/users/${user.nic}`, updatedUser);
+      await axios.put(` http://localhost:8080/api/users/${user.nic}`, updatedUser);
       
       // Update local storage and reload to reflect changes
       localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -55,7 +55,7 @@ export default function ProfileModal({ user, onClose }) {
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) return;
     try {
-      await axios.delete(`http://localhost:5199/api/users/${user.nic}`);
+      await axios.delete(`http://localhost:8080/api/users/${user.nic}`);
       localStorage.clear();
       navigate('/login');
     } catch (e) {
