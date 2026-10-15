@@ -107,7 +107,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get(` http://localhost:8080/api/users/${nic}`);
+      const response = await axios.get(`https://smart-solar-microgrid.onrender.com/api/users/${nic}`);
       const user = response.data;
 
       if (user.passwordHash !== password) {

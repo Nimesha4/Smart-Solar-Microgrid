@@ -197,11 +197,11 @@ export default function ProsumerDashboard() {
 
   const fetchData = async () => {
     try {
-      const nodesRes = await axios.get('http://localhost:8080/api/nodes');
+      const nodesRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/nodes');
       // Only show active nodes
       setNodes(nodesRes.data.filter(n => n.isActive));
 
-      const resRes = await axios.get(`http://localhost:8080/api/reservations/prosumer/${user.nic}`);
+      const resRes = await axios.get(`https://smart-solar-microgrid.onrender.com/api/reservations/prosumer/${user.nic}`);
       setReservations(resRes.data);
     } catch (e) {
       console.error(e);
@@ -220,7 +220,7 @@ export default function ProsumerDashboard() {
         energyAmountKwh: parseFloat(energyAmount)
       };
 
-      await axios.post('http://localhost:8080/api/reservations', newBooking);
+      await axios.post('https://smart-solar-microgrid.onrender.com/api/reservations', newBooking);
       alert("Booking created successfully!");
       setEnergyAmount('');
       setScheduledDate('');
@@ -236,7 +236,7 @@ export default function ProsumerDashboard() {
 
   const handleCancelBooking = async (id) => {
     try {
-      await axios.delete(`http://localhost:8080/api/reservations/${id}`);
+      await axios.delete(`https://smart-solar-microgrid.onrender.com/api/reservations/${id}`);
       fetchData();
     } catch (e) {
       if (e.response && e.response.data) {

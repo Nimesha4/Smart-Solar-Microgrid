@@ -42,7 +42,7 @@ export default function ProfileModal({ user, onClose }) {
         passwordHash: finalPassword
       };
 
-      await axios.put(` http://localhost:8080/api/users/${user.nic}`, updatedUser);
+      await axios.put(`https://smart-solar-microgrid.onrender.com/api/users/${user.nic}`, updatedUser);
       
       // Update local storage and reload to reflect changes
       localStorage.setItem('user', JSON.stringify(updatedUser));
