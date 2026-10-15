@@ -18,9 +18,9 @@ object ApiClient {
     private const val PREF_NAME = "SmartSolarApiPrefs"
     private const val KEY_BASE_URL = "base_url"
 
-    // Default Base URL pointing to the Render backend deployment
+    // Default Base URL pointing to the Render backend API deployment
     @JvmField
-    val RENDER_BASE_URL: String = "https://smart-solar-microgrid.onrender.com/"
+    val RENDER_BASE_URL: String = "https://smart-solar-microgrid.onrender.com/api/"
 
     @get:JvmStatic
     var baseUrl: String = RENDER_BASE_URL
@@ -30,7 +30,8 @@ object ApiClient {
     fun init(context: Context?) {
         if (context != null) {
             val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            baseUrl = prefs.getString(KEY_BASE_URL, RENDER_BASE_URL) ?: RENDER_BASE_URL
+            val savedUrl = prefs.getString(KEY_BASE_URL, RENDER_BASE_URL)
+            setBaseUrl(context, savedUrl)
         }
     }
 
@@ -39,7 +40,15 @@ object ApiClient {
         var url = newUrl?.trim()
         if (url.isNullOrEmpty()) {
             url = RENDER_BASE_URL
-        } else if (!url.endsWith("/")) {
+        } else {
+            // Strip trailing slashes to normalize
+            while (url!!.endsWith("/")) {
+                url = url.substring(0, url.length - 1)
+            }
+            // Append /api/ if not present
+            if (!url.endsWith("/api")) {
+                url += "/api"
+            }
             url += "/"
         }
         baseUrl = url
