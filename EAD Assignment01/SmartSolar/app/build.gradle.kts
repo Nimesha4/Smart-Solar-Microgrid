@@ -35,10 +35,17 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation("androidx.cardview:cardview:1.0.0")
 
-    // Retrofit for REST API calls to the C# backend
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Retrofit 2.11.0 & Gson Converter
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
-    // ZXing QR (operator scanner + prosumer QR display)
+    // OkHttp Logging Interceptor 4.12.0
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Kotlin Coroutines & Lifecycle KTX
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+
+    // ZXing QR
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 }
