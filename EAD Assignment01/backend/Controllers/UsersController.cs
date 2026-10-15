@@ -51,14 +51,26 @@ namespace SmartSolar.Backend.Controllers
             };
 
             await _userService.CreateAsync(user);
-            return CreatedAtAction(nameof(Get), new { nic = user.Nic }, user);
+            return CreatedAtAction(
+    nameof(Get),
+    new { nic = user.Nic },
+    new
+    {
+        nic = user.Nic,
+        name = user.Name,
+        email = user.Email,
+        role = user.Role,
+        isActive = user.IsActive
+    }
+);
         }
 
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto login)
         {
-            if (string.IsNullOrWhiteSpace(login.Nic) ||
+            if (login == null ||
+                string.IsNullOrWhiteSpace(login.Nic) ||
                 string.IsNullOrEmpty(login.Password))
             {
                 return BadRequest(new
@@ -69,7 +81,7 @@ namespace SmartSolar.Backend.Controllers
 
             var user = await _userService.GetAsync(login.Nic.Trim());
 
-            if (user is null ||
+            if (user == null ||
                 !PasswordHasher.VerifyHashedPassword(
                     user.PasswordHash,
                     login.Password))
@@ -110,7 +122,7 @@ namespace SmartSolar.Backend.Controllers
             await _userService.UpdateAsync(nic, updatedUser);
             return NoContent();
         }
-        
+
         [HttpPut("deactivate/{nic}")]
         public async Task<IActionResult> Deactivate(string nic)
         {
@@ -121,7 +133,7 @@ namespace SmartSolar.Backend.Controllers
             await _userService.DeactivateAsync(nic);
             return NoContent();
         }
-        
+
         [HttpPut("activate/{nic}")]
         public async Task<IActionResult> Activate(string nic)
         {

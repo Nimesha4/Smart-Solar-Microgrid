@@ -1,6 +1,6 @@
 using System;
 using System.Security.Cryptography;
-
+using Microsoft.AspNetCore.Http;
 namespace SmartSolar.Backend.Services
 {
     // Simple PBKDF2-based password hasher. Produces a string containing:

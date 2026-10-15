@@ -116,11 +116,7 @@ export default function Login() {
       );
        const user = response.data;
 
-      if (user.passwordHash !== password) {
-        setError("Incorrect password.");
-        return;
-      }
-
+      
       if (!user.isActive) {
         setError("Account is deactivated. Contact Backoffice.");
         return;
