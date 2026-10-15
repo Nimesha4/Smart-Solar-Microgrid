@@ -107,8 +107,14 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get(`https://smart-solar-microgrid.onrender.com/api/users/${nic}`);
-      const user = response.data;
+      const response = await axios.post(
+        'https://smart-solar-microgrid.onrender.com/api/users/login',
+        {
+          nic: nic.trim(),
+          password: password
+        }
+      );
+       const user = response.data;
 
       if (user.passwordHash !== password) {
         setError("Incorrect password.");
@@ -120,13 +126,17 @@ export default function Login() {
         return;
       }
 
-      // Store in localStorage for basic auth simulation
       localStorage.setItem('user', JSON.stringify(user));
 
-      if (user.role === 'Backoffice') navigate('/backoffice');
-      else if (user.role === 'GridOperator') navigate('/operator');
-      else if (user.role === 'Prosumer') navigate('/prosumer');
-      else setError("Invalid role.");
+      if (user.role === 'Backoffice') {
+        navigate('/backoffice');
+      } else if (user.role === 'GridOperator') {
+        navigate('/operator');
+      } else if (user.role === 'Prosumer') {
+        navigate('/prosumer');
+      } else {
+        setError('Invalid role.');
+      }
     } catch (err) {
       setError("User not found or connection error.");
     }

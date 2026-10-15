@@ -54,20 +54,49 @@ namespace SmartSolar.Backend.Controllers
             return CreatedAtAction(nameof(Get), new { nic = user.Nic }, user);
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login(UserLoginDto login)
-        {
-            var user = await _userService.GetAsync(login.Nic);
-            if (user is null)
-                return Unauthorized();
 
-            if (!PasswordHasher.VerifyHashedPassword(user.PasswordHash, login.Password))
-                return Unauthorized();
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] UserLoginDto login)
+        {
+            if (string.IsNullOrWhiteSpace(login.Nic) ||
+                string.IsNullOrEmpty(login.Password))
+            {
+                return BadRequest(new
+                {
+                    message = "NIC and password are required."
+                });
+            }
+
+            var user = await _userService.GetAsync(login.Nic.Trim());
+
+            if (user is null ||
+                !PasswordHasher.VerifyHashedPassword(
+                    user.PasswordHash,
+                    login.Password))
+            {
+                return Unauthorized(new
+                {
+                    message = "Invalid NIC or password."
+                });
+            }
 
             if (!user.IsActive)
-                return Forbid();
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    message = "Account is deactivated. Contact Backoffice."
+                });
+            }
 
-            return Ok(new { message = "Login successful", nic = user.Nic, role = user.Role });
+            return Ok(new
+            {
+                message = "Login successful",
+                nic = user.Nic,
+                name = user.Name,
+                email = user.Email,
+                role = user.Role,
+                isActive = user.IsActive
+            });
         }
 
         [HttpPut("{nic}")]

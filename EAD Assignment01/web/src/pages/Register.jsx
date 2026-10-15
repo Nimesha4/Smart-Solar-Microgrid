@@ -111,7 +111,7 @@ export default function Register() {
         name: name.trim(),
         email: email.trim(),
         password: password,
-        role: "Prosumer"
+        role: role
       };
 
 
@@ -133,10 +133,10 @@ export default function Register() {
 
   };
 
+  // Public registration supports only Prosumer and GridOperator accounts.
   const roles = [
     { value: 'Prosumer', label: 'Prosumer', icon: Zap },
     { value: 'GridOperator', label: 'Grid operator', icon: Wrench },
-    { value: 'Backoffice', label: 'Backoffice', icon: ShieldCheck },
   ];
 
   return (
@@ -278,7 +278,7 @@ export default function Register() {
         .rg-input-wrap input:focus { outline: none; border-color: #146B5C; box-shadow: 0 0 0 3px rgba(20,107,92,0.12); }
 
         /* Role segmented control */
-        .rg-role-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .rg-role-seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
         .rg-role-btn {
           display: flex; flex-direction: column; align-items: center; gap: 6px;
           padding: 12px 6px; border-radius: 10px; border: 1px solid #DEDCD3; background: #FFFFFF;
@@ -437,11 +437,23 @@ export default function Register() {
 
                 <div className="rg-field" style={{ marginBottom: 24 }}>
                   <label>Account type</label>
-                  <div className="rg-role-seg" style={{ gridTemplateColumns: '1fr' }}>
-                    <div className="rg-role-btn rg-active" style={{ cursor: 'default', flexDirection: 'row', justifyContent: 'center', gap: '8px', padding: '14px' }}>
-                      <Zap size={18} />
-                      <span style={{ fontSize: '13.5px' }}>Prosumer</span>
-                    </div>
+                  <div className="rg-role-seg" role="group" aria-label="Choose account type">
+                    {roles.map(({ value, label, icon: RoleIcon }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={`rg-role-btn ${role === value ? 'rg-active' : ''}`}
+                        aria-pressed={role === value}
+                        onClick={() => {
+                          setRole(value);
+                          setError('');
+                        }}
+                        style={{ flexDirection: 'row', justifyContent: 'center', gap: '8px', padding: '14px' }}
+                      >
+                        <RoleIcon size={18} />
+                        <span style={{ fontSize: '13.5px' }}>{label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
