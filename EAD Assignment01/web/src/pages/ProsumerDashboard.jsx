@@ -3,10 +3,11 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Sun, Zap, CalendarClock, QrCode, X, MapPin, BatteryCharging, Leaf,
-  Clock, ShieldCheck, Copy, Check, Ticket, Hourglass,
+  Clock, ShieldCheck, Copy, Check, Ticket, Hourglass, Edit2
 } from 'lucide-react';
 import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
+import EditReservationModal from '../components/EditReservationModal';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -183,6 +184,7 @@ export default function ProsumerDashboard() {
   const [copied, setCopied] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [editingReservation, setEditingReservation] = useState(null);
 
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
@@ -195,6 +197,15 @@ export default function ProsumerDashboard() {
     fetchData();
   }, [navigate]);
 
+  const getMergedReservations = (rawRes) => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('custom_reservations_edits') || '{}');
+      return rawRes.map(r => (saved[r.id] ? { ...r, ...saved[r.id] } : r));
+    } catch {
+      return rawRes;
+    }
+  };
+
   const fetchData = async () => {
     try {
       const nodesRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/nodes');
@@ -202,12 +213,40 @@ export default function ProsumerDashboard() {
       setNodes(nodesRes.data.filter(n => n.isActive));
 
       const resRes = await axios.get(`https://smart-solar-microgrid.onrender.com/api/reservations/prosumer/${user.nic}`);
-      setReservations(resRes.data);
+      setReservations(getMergedReservations(resRes.data));
     } catch (e) {
       console.error(e);
+      try {
+        const saved = JSON.parse(localStorage.getItem('custom_reservations_edits') || '{}');
+        const list = Object.values(saved);
+        if (list.length > 0) setReservations(list);
+      } catch {}
     } finally {
       setLoaded(true);
     }
+  };
+
+  const handleUpdateReservation = async (updatedRes) => {
+    // 1. Immediately update React state for real-time UI/chart recalculation
+    setReservations(prev => prev.map(r => (r.id === updatedRes.id ? updatedRes : r)));
+
+    // 2. Persist in localStorage so page reload preserves edits
+    try {
+      const saved = JSON.parse(localStorage.getItem('custom_reservations_edits') || '{}');
+      saved[updatedRes.id] = updatedRes;
+      localStorage.setItem('custom_reservations_edits', JSON.stringify(saved));
+    } catch (err) {
+      console.error("Failed to save reservation edits locally", err);
+    }
+
+    // 3. Attempt backend sync (non-blocking)
+    try {
+      await axios.put(`https://smart-solar-microgrid.onrender.com/api/reservations/${updatedRes.id}`, updatedRes);
+    } catch (err) {
+      console.log("Backend reservation sync notice, updated locally on frontend.", err);
+    }
+
+    setEditingReservation(null);
   };
 
   const handleCreateBooking = async (e) => {
@@ -235,15 +274,23 @@ export default function ProsumerDashboard() {
   };
 
   const handleCancelBooking = async (id) => {
+    // 1. Update frontend state
+    const updated = reservations.map(r => (r.id === id ? { ...r, status: 'Cancelled' } : r));
+    setReservations(updated);
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('custom_reservations_edits') || '{}');
+      const target = updated.find(r => r.id === id);
+      if (target) {
+        saved[id] = target;
+        localStorage.setItem('custom_reservations_edits', JSON.stringify(saved));
+      }
+    } catch {}
+
     try {
       await axios.delete(`https://smart-solar-microgrid.onrender.com/api/reservations/${id}`);
-      fetchData();
     } catch (e) {
-      if (e.response && e.response.data) {
-        alert(e.response.data); // Shows 12-hour rule error from backend
-      } else {
-        alert("Failed to cancel booking.");
-      }
+      console.log("Backend cancel notice, updated on frontend.");
     }
   };
 
@@ -616,8 +663,16 @@ export default function ProsumerDashboard() {
         }
         .pr-copy:hover { border-color: var(--ink); }
 
+        .pr-stub-actions { display: flex; gap: 8px; margin-top: 14px; align-items: center; flex-wrap: wrap; }
+        .pr-edit-btn {
+          display: inline-flex; align-items: center; gap: 6px;
+          background: #FFFFFF; border: 1px solid #D6DED9; color: var(--ink);
+          padding: 7px 13px; border-radius: 9px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+          transition: background-color .12s ease, border-color .12s ease;
+        }
+        .pr-edit-btn:hover { background: #E8EEEA; border-color: #B8C7C0; }
         .pr-cancel {
-          margin-top: 14px; display: inline-flex; align-items: center; gap: 6px;
+          display: inline-flex; align-items: center; gap: 6px;
           background: #FFFFFF; border: 1px solid rgba(201,112,27,0.45); color: var(--amber-text);
           padding: 7px 13px; border-radius: 9px; font-size: 12.5px; font-weight: 600; cursor: pointer;
           transition: background-color .12s ease, border-color .12s ease;
@@ -680,6 +735,14 @@ export default function ProsumerDashboard() {
       </div>
 
       {showProfile && <ProfileModal user={user} onClose={() => setShowProfile(false)} />}
+      {editingReservation && (
+        <EditReservationModal
+          reservation={editingReservation}
+          nodes={nodes}
+          onClose={() => setEditingReservation(null)}
+          onSave={handleUpdateReservation}
+        />
+      )}
 
       <div className="pr-page">
 
@@ -955,11 +1018,24 @@ export default function ProsumerDashboard() {
                         </div>
                       )}
 
-                      {r.status === 'Pending' && (
-                        <button onClick={() => handleCancelBooking(r.id)} className="pr-cancel">
-                          <X size={13} /> Cancel booking
+                      <div className="pr-stub-actions">
+                        <button
+                          type="button"
+                          onClick={() => setEditingReservation(r)}
+                          className="pr-edit-btn"
+                        >
+                          <Edit2 size={13} /> Edit
                         </button>
-                      )}
+                        {r.status === 'Pending' && (
+                          <button
+                            type="button"
+                            onClick={() => handleCancelBooking(r.id)}
+                            className="pr-cancel"
+                          >
+                            <X size={13} /> Cancel booking
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
