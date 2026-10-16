@@ -249,7 +249,7 @@ export default function ProsumerDashboard() {
       console.error("Failed to save reservation edits locally", err);
     }
 
-    // 3. Attempt backend sync (non-blocking)
+    // 3. Attempt backend sync (non - blocking)
     try {
       await axios.put(`https://smart-solar-microgrid.onrender.com/api/reservations/${updatedRes.id}`, updatedRes);
     } catch (err) {
