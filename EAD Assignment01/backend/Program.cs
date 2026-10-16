@@ -9,6 +9,7 @@ builder.Services.Configure<SmartSolarDatabaseSettings>(
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<MicrogridNodeService>();
 builder.Services.AddSingleton<ReservationService>();
+builder.Services.AddSingleton<TransactionService>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

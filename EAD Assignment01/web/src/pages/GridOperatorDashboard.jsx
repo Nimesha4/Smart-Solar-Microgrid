@@ -8,6 +8,7 @@ import {
 import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
 
+
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
 /*  any picture. If an image fails to load, a green gradient is shown */
@@ -599,6 +600,14 @@ export default function GridOperatorDashboard() {
           <button role="tab" aria-selected={activeTab === 'bookings'} className={`go-tab ${activeTab === 'bookings' ? 'active' : ''}`} onClick={() => setActiveTab('bookings')}>
             Bookings
           </button>
+          <button
+  role="tab"
+  aria-selected={activeTab === 'transactions'}
+  className={`go-tab ${activeTab === 'transactions' ? 'active' : ''}`}
+  onClick={() => navigate('/grid-operator/transactions')}
+>
+  Power Trading Transactions
+</button>
         </div>
 
         <div className="go-user">
