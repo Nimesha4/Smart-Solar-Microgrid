@@ -6,6 +6,7 @@ import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
 import EditNodeModal from '../components/EditNodeModal';
 import EditEnergySlotModal from '../components/EditEnergySlotModal';
+import MicrogridGoogleMap from '../components/MicrogridGoogleMap';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -92,6 +93,7 @@ export default function BackofficeDashboard() {
   const [search, setSearch] = useState('');
   const [userFilter, setUserFilter] = useState('All');
   const [hubFilter, setHubFilter] = useState('All');
+  const [showHubMap, setShowHubMap] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [editingNode, setEditingNode] = useState(null);
@@ -950,6 +952,15 @@ export default function BackofficeDashboard() {
                 <span>Manage GPS coordinates, battery storage slots, and energy capacity.</span>
               </div>
               <div className="bo-chips">
+                <button
+                  type="button"
+                  className={`bo-chip ${showHubMap ? 'active' : ''}`}
+                  onClick={() => setShowHubMap(!showHubMap)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <MapPin size={12} />
+                  {showHubMap ? 'Hide Google Map' : 'Show Google Map'}
+                </button>
                 {['All', 'Accepting', 'Offline'].map(f => (
                   <button key={f} className={`bo-chip ${hubFilter === f ? 'active' : ''}`} onClick={() => setHubFilter(f)}>
                     {f} {f === 'All' ? nodes.length : f === 'Accepting' ? activeNodes.length : offlineNodes}
@@ -957,6 +968,14 @@ export default function BackofficeDashboard() {
                 ))}
               </div>
             </div>
+
+            {/* Google Maps Integration */}
+            {showHubMap && (
+              <MicrogridGoogleMap
+                nodes={visibleNodes.length > 0 ? visibleNodes : nodes}
+                onEditNode={setEditingNode}
+              />
+            )}
 
             <div className="bo-hubs">
               {loaded && nodes.length === 0 && <div className="bo-empty">No hubs registered. Add the first one above.</div>}
