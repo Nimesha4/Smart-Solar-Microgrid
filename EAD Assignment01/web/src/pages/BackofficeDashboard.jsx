@@ -174,8 +174,10 @@ export default function BackofficeDashboard() {
     try {
       const usersRes = await axios.get(apiUrl('/api/users'));
       setUsers(usersRes.data);
-      const nodesRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/nodes');
-      setNodes(getMergedNodes(nodesRes.data));
+      const nodesRes = await axios.get(apiUrl('/api/nodes'));
+      const mergedNodes = getMergedNodes(nodesRes.data);
+      setNodes(mergedNodes);
+      loadEnergySlots(mergedNodes);
     } catch (e) {
       console.error("Fetch error", e);
       try {
@@ -311,8 +313,8 @@ export default function BackofficeDashboard() {
     try {
       const newNode = {
         name: nodeName,
-        latitude: 6.9271, // Mock GPS
-        longitude: 79.8612,
+        latitude: parseFloat(nodeLat) || 6.9271,
+        longitude: parseFloat(nodeLng) || 79.8612,
         capacityKwh: parseFloat(capacity),
         availableBatterySlots: parseInt(batterySlots),
         isActive: true,

@@ -18,8 +18,8 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import HeaderMenu from "../components/HeaderMenu";
 import "../App.css";
-
-const API_BASE_URL = "https://smart-solar-microgrid.onrender.com/api";
+import { apiUrl } from '../config';
+const API_BASE_URL = apiUrl;
 
 const getReservationId = (reservation) =>
   String(reservation?.id ?? reservation?._id ?? reservation?.reservationId ?? "");
