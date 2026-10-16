@@ -63,20 +63,52 @@ namespace SmartSolar.Backend.Controllers
             return NoContent();
         }
         
+        //UT
         [HttpPut("approve/{id}")]
         public async Task<IActionResult> Approve(string id)
         {
             var res = await _reservationService.GetAsync(id);
+
             if (res is null)
-                return NotFound();
+                return NotFound("Reservation not found.");
+
+            if (res.Status != "Pending")
+                return BadRequest(
+                    "Only pending reservations can be approved.");
 
             res.Status = "Approved";
-            // Generate mock QR Code token
-            res.QrCodeData = $"QR_{res.Id}_{Guid.NewGuid().ToString().Substring(0, 8)}";
-            
+
+            // Generate a random, server-side QR token.
+            res.QrCodeData =
+                Convert.ToHexString(
+                    System.Security.Cryptography.RandomNumberGenerator
+                        .GetBytes(32));
+
             await _reservationService.UpdateAsync(id, res);
+
             return Ok(res);
         }
+
+        
+        [HttpPut("complete/{id}")]
+        public async Task<IActionResult> Complete(string id)
+        {
+            var res = await _reservationService.GetAsync(id);
+
+            if (res is null)
+                return NotFound("Reservation not found.");
+
+            if (res.Status != "Approved")
+                return BadRequest(
+                    "Only approved reservations can be completed.");
+
+            res.Status = "Completed";
+
+            await _reservationService.UpdateAsync(id, res);
+
+            return Ok(res);
+        }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
