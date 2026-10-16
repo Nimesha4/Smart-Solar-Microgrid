@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Sun, User, IdCard, Mail, Lock, ArrowRight, AlertCircle, Zap, Wrench, ShieldCheck } from 'lucide-react';
+import { apiUrl } from '../config';
 
 /* ------------------------------------------------------------------ */
 /*  Photos: your own copy -> Pexels -> drawn solar artwork.           */
@@ -105,7 +106,6 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      
       const newUser = {
         nic: nic.trim(),
         name: name.trim(),
@@ -114,11 +114,9 @@ export default function Register() {
         role: role
       };
 
-
-      await axios.post('https://smart-solar-microgrid.onrender.com/api/users', newUser);
+      await axios.post(apiUrl('/api/users'), newUser);
       alert("Registration successful! You can now log in.");
       navigate('/login');
-    
     } catch (err) {
       console.error("Registration error:", err.response?.data || err.message);
 
@@ -130,7 +128,6 @@ export default function Register() {
           : "Registration failed. Please check your details and try again.")
       );
     }
-
   };
 
   // Public registration supports only Prosumer and GridOperator accounts.

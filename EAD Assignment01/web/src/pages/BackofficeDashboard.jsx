@@ -5,6 +5,7 @@ import { Sun, Users, Search, Plus, Power, Clock, MapPin, BatteryCharging, Zap, X
 import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
 import EditNodeModal from '../components/EditNodeModal';
+import { apiUrl } from '../config';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -98,9 +99,9 @@ export default function BackofficeDashboard() {
 
   const fetchData = async () => {
     try {
-      const usersRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/users');
+      const usersRes = await axios.get(apiUrl('/api/users'));
       setUsers(usersRes.data);
-      const nodesRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/nodes');
+      const nodesRes = await axios.get(apiUrl('/api/nodes'));
       setNodes(getMergedNodes(nodesRes.data));
     } catch (e) {
       console.error("Fetch error", e);
@@ -115,10 +116,8 @@ export default function BackofficeDashboard() {
   };
 
   const handleUpdateNode = async (updatedNode) => {
-    // 1. Immediately update React state for instant UI update
     setNodes(prev => prev.map(n => (n.id === updatedNode.id ? updatedNode : n)));
 
-    // 2. Persist locally in localStorage so page reload preserves edits
     try {
       const saved = JSON.parse(localStorage.getItem('custom_nodes_edits') || '{}');
       saved[updatedNode.id] = updatedNode;
@@ -127,9 +126,8 @@ export default function BackofficeDashboard() {
       console.error("Failed to save to localStorage", err);
     }
 
-    // 3. Attempt non-blocking backend sync (if backend is active)
     try {
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/nodes/${updatedNode.id}`, updatedNode);
+      await axios.put(apiUrl(`/api/nodes/${updatedNode.id}`), updatedNode);
     } catch (e) {
       console.log("Backend sync skipped/failed, saved to frontend state successfully.");
     }
@@ -138,7 +136,6 @@ export default function BackofficeDashboard() {
   };
 
   const handleDeactivateNode = async (id) => {
-    // 1. Update frontend state immediately
     const updated = nodes.map(n => (n.id === id ? { ...n, isActive: false } : n));
     setNodes(updated);
 
@@ -151,9 +148,8 @@ export default function BackofficeDashboard() {
       }
     } catch {}
 
-    // 2. Send backend deactivation request
     try {
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/nodes/deactivate/${id}`);
+      await axios.put(apiUrl(`/api/nodes/deactivate/${id}`));
     } catch (e) {
       console.log("Backend deactivate endpoint notice, frontend updated.");
     }
@@ -170,7 +166,7 @@ export default function BackofficeDashboard() {
         saved[id] = target;
         localStorage.setItem('custom_nodes_edits', JSON.stringify(saved));
       }
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/nodes/${id}`, target);
+      await axios.put(apiUrl(`/api/nodes/${id}`), target);
     } catch (e) {
       console.log("Backend activate sync notice, frontend updated.");
     }
@@ -178,7 +174,7 @@ export default function BackofficeDashboard() {
 
   const handleDeactivateUser = async (nic) => {
     try {
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/users/deactivate/${nic}`);
+      await axios.put(apiUrl(`/api/users/deactivate/${nic}`));
       fetchData();
     } catch (e) {
       alert("Failed to deactivate user.");
@@ -187,7 +183,7 @@ export default function BackofficeDashboard() {
 
   const handleActivateUser = async (nic) => {
     try {
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/users/activate/${nic}`);
+      await axios.put(apiUrl(`/api/users/activate/${nic}`));
       fetchData();
     } catch (e) {
       alert("Failed to activate user.");
@@ -199,14 +195,14 @@ export default function BackofficeDashboard() {
     try {
       const newNode = {
         name: nodeName,
-        latitude: 6.9271, // Mock GPS
+        latitude: 6.9271,
         longitude: 79.8612,
         capacityKwh: parseFloat(capacity),
         availableBatterySlots: parseInt(batterySlots),
         isActive: true,
         operatingSchedule: "08:00-18:00"
       };
-      await axios.post('https://smart-solar-microgrid.onrender.com/api/nodes', newNode);
+      await axios.post(apiUrl('/api/nodes'), newNode);
       setNodeName(''); setCapacity(''); setBatterySlots('');
       fetchData();
     } catch (e) {

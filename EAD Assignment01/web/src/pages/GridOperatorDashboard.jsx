@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
+import { apiUrl } from '../config';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -44,7 +45,6 @@ function niceCeil(max) {
 
 const sunAt = h => (h < 5.5 || h > 19.5 ? 0 : Math.exp(-Math.pow(h - 12.5, 2) / (2 * 2.7 * 2.7)));
 
-/* Smooth area/line chart: energy per day */
 function EnergyChart({ data }) {
   const W = 640, H = 240, L = 46, R = 18, T = 26, B = 36;
   if (!data.length) {
@@ -95,7 +95,6 @@ function EnergyChart({ data }) {
   );
 }
 
-/* Energy booked by hour of day, with a faint typical-sun curve behind it */
 function HourChart({ hours }) {
   const W = 640, H = 230, L = 40, R = 12, T = 22, B = 32;
   const total = hours.reduce((a, b) => a + b, 0);
@@ -167,8 +166,6 @@ function StatusDonut({ segments, total }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-
 export default function GridOperatorDashboard() {
   const [nodes, setNodes] = useState([]);
   const [reservations, setReservations] = useState([]);
@@ -189,13 +186,12 @@ export default function GridOperatorDashboard() {
 
   const fetchData = async () => {
     try {
-      const nodesRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/nodes');
+      const nodesRes = await axios.get(apiUrl('/api/nodes'));
       setNodes(nodesRes.data);
 
-      const resRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/reservations');
+      const resRes = await axios.get(apiUrl('/api/reservations'));
       setReservations(resRes.data);
 
-      // Initialize input states for nodes
       const initialInputs = {};
       nodesRes.data.forEach(n => {
         initialInputs[n.id] = n.availableBatterySlots;
@@ -215,7 +211,7 @@ export default function GridOperatorDashboard() {
         ...node,
         availableBatterySlots: parseInt(slotInputs[node.id])
       };
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/nodes/${node.id}`, updatedNode);
+      await axios.put(apiUrl(`/api/nodes/${node.id}`), updatedNode);
       alert(`Successfully updated battery slots for ${node.name}`);
       fetchData();
     } catch (e) {
@@ -225,7 +221,7 @@ export default function GridOperatorDashboard() {
 
   const handleApproveReservation = async (id) => {
     try {
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/reservations/approve/${id}`);
+      await axios.put(apiUrl(`/api/reservations/approve/${id}`));
       fetchData();
     } catch (e) {
       alert("Failed to approve reservation");
@@ -239,7 +235,6 @@ export default function GridOperatorDashboard() {
 
   const pendingCount = reservations.filter(r => r.status === 'Pending').length;
 
-  /* ---------- derived data for stats and charts ---------- */
   const statusClass = (s) => s === 'Approved' ? 'go-on' : s === 'Pending' ? 'go-pending' : 'go-closed';
   const statusGroup = (s) => (s === 'Approved' || s === 'Pending' ? s : 'Other');
   const fmt = (v) => Number(v.toFixed(1)).toLocaleString();
@@ -278,21 +273,16 @@ export default function GridOperatorDashboard() {
     const hours = Array(24).fill(0);
     reservations.forEach(r => {
       const d = new Date(r.scheduledTime);
-      if (!isNaN(d)) hours[d.getHours()] += kwhOf(r);
+      if (isNaN(d)) return;
+      hours[d.getHours()] += kwhOf(r);
     });
     return hours;
   })();
 
-  // Needs-attention first: pending, then approved, then the rest; soonest slot first
-  const rank = (s) => (s === 'Pending' ? 0 : s === 'Approved' ? 1 : 2);
-  const visible = [...reservations]
-    .sort((a, b) => rank(a.status) - rank(b.status) || new Date(a.scheduledTime) - new Date(b.scheduledTime))
-    .filter(r => filter === 'All' || statusGroup(r.status) === filter);
-
-  const hasNodeRef = reservations.some(r => r.microgridNodeId !== undefined && r.microgridNodeId !== null);
-  const hubName = (r) =>
-    r.microgridNodeName || r.microgridNode?.name ||
-    nodes.find(n => String(n.id) === String(r.microgridNodeId))?.name;
+  const visibleReservations = reservations.filter(r => {
+    if (filter === 'All') return true;
+    return r.status === filter;
+  });
 
   return (
     <div className="go-root">
