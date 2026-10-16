@@ -43,22 +43,22 @@ function getQrToken(item) {
 }
 
 function getEnergy(item) {
-  return (
-    item?.energyAmountKwh ??
-    item?.EnergyAmountKwh ??
-    0
-  );
+  return item?.energyAmountKwh ?? item?.EnergyAmountKwh ?? 0;
 }
 
 function getNic(item) {
-  return item?.prosumerNic ?? item?.ProsumerNic ?? "—";
+  return (
+    item?.prosumerNic ??
+    item?.ProsumerNic ??
+    "NIC unavailable"
+  );
 }
 
 function getNodeId(item) {
   return (
     item?.microgridNodeId ??
     item?.MicrogridNodeId ??
-    "—"
+    "Node unavailable"
   );
 }
 
@@ -82,7 +82,7 @@ async function readResponse(response) {
   }
 }
 
-function errorMessage(data, fallback) {
+function getErrorMessage(data, fallback) {
   if (typeof data === "string" && data.trim()) return data;
 
   return (
@@ -91,6 +91,20 @@ function errorMessage(data, fallback) {
     data?.title ??
     fallback
   );
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : date.toLocaleString();
+}
+
+function getBookingReference(id) {
+  return id ? id.slice(-6).toUpperCase() : "UNKNOWN";
 }
 
 export default function TransactionsPage() {
@@ -120,7 +134,7 @@ export default function TransactionsPage() {
 
       if (!reservationResponse.ok) {
         throw new Error(
-          errorMessage(
+          getErrorMessage(
             reservationData,
             `Failed to load bookings (HTTP ${reservationResponse.status}).`
           )
@@ -136,11 +150,11 @@ export default function TransactionsPage() {
         "Items",
       ]);
 
-      setReservations(
-        reservationList.filter(
-          (reservation) => getStatus(reservation) === "approved"
-        )
+      const approvedBookings = reservationList.filter(
+        (booking) => getStatus(booking) === "approved"
       );
+
+      setReservations(approvedBookings);
 
       try {
         const transactionResponse = await fetch(
@@ -155,7 +169,7 @@ export default function TransactionsPage() {
           setTransactionsAvailable(false);
 
           setError(
-            `Bookings loaded, but the transactions API returned HTTP ${transactionResponse.status}. Deploy or fix the backend endpoint.`
+            `Bookings loaded, but transactions returned HTTP ${transactionResponse.status}. Deploy or fix the backend transactions endpoint.`
           );
         } else {
           setTransactions(
@@ -222,7 +236,7 @@ export default function TransactionsPage() {
       (item) => getId(item) === selectedId
     );
 
-    // Automatically retrieve the token stored with this booking.
+    // Automatically use the QR token already stored on the booking.
     setQrCodeData(booking ? getQrToken(booking) : "");
   };
 
@@ -245,14 +259,14 @@ export default function TransactionsPage() {
 
     if (isAlreadyRecorded(selectedBooking)) {
       setError(
-        "A transaction has already been recorded for this booking."
+        "A transaction already exists for this booking."
       );
       return;
     }
 
     if (!qrCodeData.trim()) {
       setError(
-        "The QR token was not returned by the booking API. The backend must provide the existing token securely."
+        "The selected booking did not return its QR token. The backend must provide the existing token securely."
       );
       return;
     }
@@ -278,9 +292,9 @@ export default function TransactionsPage() {
 
       if (!response.ok) {
         throw new Error(
-          errorMessage(
+          getErrorMessage(
             result,
-            `Could not create transaction (HTTP ${response.status}).`
+            `Transaction creation failed (HTTP ${response.status}).`
           )
         );
       }
@@ -299,20 +313,10 @@ export default function TransactionsPage() {
     }
   };
 
-  const formatDate = (value) => {
-    if (!value) return "—";
-
-    const date = new Date(value);
-
-    return Number.isNaN(date.getTime())
-      ? String(value)
-      : date.toLocaleString();
-  };
-
   if (pageLoading) {
     return (
       <main style={styles.container}>
-        <p>Loading approved bookings and transactions...</p>
+        Loading bookings and transactions...
       </main>
     );
   }
@@ -326,15 +330,14 @@ export default function TransactionsPage() {
           </h1>
 
           <p style={styles.subtitle}>
-            Verify approved bookings and record completed
-            power trading transactions.
+            Select an approved booking, verify its QR token,
+            and record the power trading transaction.
           </p>
         </div>
 
         <button
           type="button"
           onClick={loadData}
-          disabled={pageLoading}
           style={styles.secondaryButton}
         >
           Refresh
@@ -376,8 +379,9 @@ export default function TransactionsPage() {
         </h2>
 
         <p style={styles.description}>
-          Choose a booking to view its details and retrieve
-          its existing QR verification token automatically.
+          Identify the booking using the prosumer, node, and
+          energy amount. The short reference helps distinguish
+          bookings without displaying the full database ID.
         </p>
 
         <label style={styles.label} htmlFor="reservation">
@@ -393,7 +397,9 @@ export default function TransactionsPage() {
           required
           style={styles.input}
         >
-          <option value="">-- Select a booking --</option>
+          <option value="">
+            -- Choose a booking to verify --
+          </option>
 
           {reservations.map((booking, index) => {
             const id = getId(booking);
@@ -405,9 +411,7 @@ export default function TransactionsPage() {
                 value={id}
                 disabled={!id || recorded}
               >
-                Booking {id || "Unknown"} —{" "}
-                {getEnergy(booking)} kWh
-                {recorded ? " — Already recorded" : ""}
+                {`Prosumer: ${getNic(booking)} | Node: ${getNodeId(booking)} | Energy: ${getEnergy(booking)} kWh | Ref: ${getBookingReference(id)}${recorded ? " | Already recorded" : ""}`}
               </option>
             );
           })}
@@ -416,8 +420,7 @@ export default function TransactionsPage() {
         {reservations.length === 0 && (
           <p style={styles.note}>
             No approved bookings were returned by the API.
-            Confirm that your reservations endpoint returns
-            bookings with an Approved status.
+            Check the reservation response and booking statuses.
           </p>
         )}
       </section>
@@ -430,8 +433,17 @@ export default function TransactionsPage() {
 
           <div style={styles.detailGrid}>
             <div style={styles.detailItem}>
-              <span>Booking ID</span>
-              <strong>{getId(selectedBooking) || "—"}</strong>
+              <span>Booking Reference</span>
+              <strong>
+                {getBookingReference(getId(selectedBooking))}
+              </strong>
+            </div>
+
+            <div style={styles.detailItem}>
+              <span>Full Booking ID</span>
+              <strong style={styles.longId}>
+                {getId(selectedBooking)}
+              </strong>
             </div>
 
             <div style={styles.detailItem}>
@@ -455,15 +467,6 @@ export default function TransactionsPage() {
                 Approved
               </strong>
             </div>
-
-            <div style={styles.detailItem}>
-              <span>Transaction Status</span>
-              <strong>
-                {isAlreadyRecorded(selectedBooking)
-                  ? "Already Recorded"
-                  : "Not Yet Recorded"}
-              </strong>
-            </div>
           </div>
 
           <div style={styles.qrPanel}>
@@ -471,30 +474,22 @@ export default function TransactionsPage() {
               <span style={styles.qrSymbol}>▦</span>
             </div>
 
-            <div style={styles.qrText}>
+            <div>
               <h3 style={styles.qrTitle}>
                 QR Token Verification
               </h3>
 
               {qrCodeData ? (
-                <>
-                  <p style={styles.successText}>
-                    Existing QR token retrieved from the
-                    selected booking.
-                  </p>
-
-                  <p style={styles.description}>
-                    The token is filled in automatically and
-                    will be validated by the backend when
-                    you record the transaction.
-                  </p>
-                </>
+                <p style={styles.successText}>
+                  Existing QR token retrieved automatically.
+                  The backend will validate it when you submit.
+                </p>
               ) : (
                 <p style={styles.warningText}>
-                  The booking API did not return its QR token.
-                  The existing QR code may still be displayed
-                  on another page, but this page cannot verify
-                  it until the backend provides the token.
+                  The booking response does not contain a QR
+                  token. The backend must expose the existing
+                  token securely before this transaction can
+                  be submitted.
                 </p>
               )}
             </div>
@@ -512,16 +507,17 @@ export default function TransactionsPage() {
               onChange={(event) =>
                 setQrCodeData(event.target.value)
               }
-              placeholder="Token retrieved from the booking"
+              placeholder="Automatically retrieved from booking"
               autoComplete="off"
               required
-              style={styles.input}
               readOnly={Boolean(getQrToken(selectedBooking))}
+              style={styles.input}
             />
 
             <p style={styles.helpText}>
-              For security, the token is hidden. You do not
-              need to type it when it is returned by the API.
+              The token is hidden for security. It will be
+              submitted automatically when you record the
+              transaction.
             </p>
 
             <button
@@ -532,11 +528,22 @@ export default function TransactionsPage() {
                 !qrCodeData.trim() ||
                 isAlreadyRecorded(selectedBooking)
               }
-              style={styles.primaryButton}
+              style={{
+                ...styles.primaryButton,
+                opacity:
+                  loading ||
+                  !transactionsAvailable ||
+                  !qrCodeData.trim() ||
+                  isAlreadyRecorded(selectedBooking)
+                    ? 0.6
+                    : 1,
+              }}
             >
               {loading
-                ? "Verifying and Recording..."
-                : "Verify QR Token & Record Transaction"}
+                ? "Verifying..."
+                : isAlreadyRecorded(selectedBooking)
+                  ? "Transaction Already Recorded"
+                  : "Verify QR Token & Record Transaction"}
             </button>
           </form>
         </section>
@@ -553,9 +560,9 @@ export default function TransactionsPage() {
 
         {!transactionsAvailable ? (
           <p style={styles.note}>
-            Transaction history is unavailable. The backend
-            transactions endpoint must be deployed and return
-            a successful response.
+            Transaction history is unavailable because the
+            backend transactions endpoint did not respond
+            successfully.
           </p>
         ) : transactions.length === 0 ? (
           <p style={styles.note}>
@@ -567,7 +574,7 @@ export default function TransactionsPage() {
               <thead>
                 <tr>
                   <th style={styles.th}>Transaction ID</th>
-                  <th style={styles.th}>Booking ID</th>
+                  <th style={styles.th}>Booking Reference</th>
                   <th style={styles.th}>Prosumer NIC</th>
                   <th style={styles.th}>Energy (kWh)</th>
                   <th style={styles.th}>Transaction Time</th>
@@ -579,11 +586,13 @@ export default function TransactionsPage() {
                 {transactions.map((transaction, index) => (
                   <tr key={getId(transaction) || index}>
                     <td style={styles.td}>
-                      {getId(transaction) || "—"}
+                      {getBookingReference(getId(transaction))}
                     </td>
 
                     <td style={styles.td}>
-                      {getReservationId(transaction) || "—"}
+                      {getBookingReference(
+                        getReservationId(transaction)
+                      )}
                     </td>
 
                     <td style={styles.td}>
@@ -595,9 +604,7 @@ export default function TransactionsPage() {
                     </td>
 
                     <td style={styles.td}>
-                      {formatDate(
-                        getTransactionTime(transaction)
-                      )}
+                      {formatDate(getTransactionTime(transaction))}
                     </td>
 
                     <td style={styles.td}>
@@ -695,7 +702,7 @@ const styles = {
     border: "1px solid #cbd5e1",
     borderRadius: "6px",
     background: "#ffffff",
-    fontSize: "15px",
+    fontSize: "14px",
   },
 
   detailGrid: {
@@ -713,6 +720,11 @@ const styles = {
     padding: "16px",
     border: "1px solid #e2e8f0",
     borderRadius: "8px",
+    overflowWrap: "anywhere",
+  },
+
+  longId: {
+    fontSize: "12px",
     overflowWrap: "anywhere",
   },
 
@@ -748,19 +760,15 @@ const styles = {
     color: "#1d4ed8",
   },
 
-  qrText: {
-    minWidth: 0,
-  },
-
   qrTitle: {
     margin: "0 0 8px",
     fontSize: "17px",
   },
 
   successText: {
-    margin: "0 0 8px",
+    margin: 0,
     color: "#166534",
-    fontWeight: "600",
+    lineHeight: 1.6,
   },
 
   warningText: {
