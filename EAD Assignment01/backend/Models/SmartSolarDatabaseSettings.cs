@@ -8,5 +8,6 @@ namespace SmartSolar.Backend.Models
         public string UsersCollectionName { get; set; } = null!;
         public string MicrogridNodesCollectionName { get; set; } = null!;
         public string ReservationsCollectionName { get; set; } = null!;
+         public string TransactionsCollectionName { get; set; } = null!;
     }
 }
