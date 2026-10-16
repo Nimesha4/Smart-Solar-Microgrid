@@ -1,15 +1,26 @@
+// ============================================================================
+// Course: SE4040 - Enterprise Application Development
+// Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+// File: Program.cs
+// Description: Application entry point configuring dependency injection, middleware, and HTTP pipeline.
+// ============================================================================
+
 using SmartSolar.Backend.Models;
 using SmartSolar.Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure MongoDB database settings from appsettings.json
 builder.Services.Configure<SmartSolarDatabaseSettings>(
     builder.Configuration.GetSection("SmartSolarDatabase"));
 
+// Register singleton data access services for dependency injection
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<MicrogridNodeService>();
 builder.Services.AddSingleton<ReservationService>();
+builder.Services.AddSingleton<TransactionService>();
 
+// Add controllers and OpenAPI document generation
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 

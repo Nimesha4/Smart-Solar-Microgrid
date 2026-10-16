@@ -1,3 +1,11 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: ProsumerDashboard
+ * Description: Prosumer dashboard for reserving energy drop-off/charging slots, managing bookings (7-day rule, 12-hour rule),
+ *              retrieving cryptographic QR tokens, and locating microgrid hubs via Google Maps.
+ */
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
@@ -8,6 +16,7 @@ import {
 import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
 import EditReservationModal from '../components/EditReservationModal';
+import MicrogridGoogleMap from '../components/MicrogridGoogleMap';
 import { apiUrl } from '../config';
 
 /* ------------------------------------------------------------------ */
@@ -183,6 +192,7 @@ export default function ProsumerDashboard() {
   const [loaded, setLoaded] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [editingReservation, setEditingReservation] = useState(null);
+  const [showMap, setShowMap] = useState(false);
 
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
@@ -768,10 +778,25 @@ export default function ProsumerDashboard() {
             <div className="pr-split">
               {/* Left: hub picker + how it works */}
               <div>
-                <div className="pr-sec-head">
-                  <h3 className="pr-display">Choose a hub</h3>
-                  <span>{nodes.length} available</span>
+                <div className="pr-sec-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h3 className="pr-display">Choose a hub</h3>
+                    <span>{nodes.length} available</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowMap(!showMap)}
+                    className="pr-chip"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <MapPin size={12} />
+                    {showMap ? 'Hide Map' : 'View on Google Map'}
+                  </button>
                 </div>
+
+                {showMap && (
+                  <MicrogridGoogleMap nodes={nodes} initialSelectedId={selectedNode} />
+                )}
 
                 <div className="pr-hubs">
                   {loaded && nodes.length === 0 && (

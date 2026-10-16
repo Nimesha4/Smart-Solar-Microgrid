@@ -1,9 +1,19 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: ProfileModal
+ * Description: Modal dialog for managing authenticated user profile data, credentials, and account deactivation.
+ */
+
 import React, { useState } from 'react';
 import axios from 'axios';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { apiUrl } from '../config';
 
+/**
+ * ProfileModal renders prosumer and operator profile details with edit and password update capabilities.
+ */
 export default function ProfileModal({ user, onClose }) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.name || '');

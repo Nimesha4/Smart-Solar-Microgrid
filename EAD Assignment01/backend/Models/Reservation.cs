@@ -1,9 +1,19 @@
+// ============================================================================
+// Course: SE4040 - Enterprise Application Development
+// Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+// File: Reservation.cs
+// Description: Reservation entity model representing scheduled power trading slots and QR tokens.
+// ============================================================================
+
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System;
 
 namespace SmartSolar.Backend.Models
 {
+    /// <summary>
+    /// Represents an energy drop-off or charging reservation scheduled by a prosumer.
+    /// </summary>
     public class Reservation
     {
         [BsonId]

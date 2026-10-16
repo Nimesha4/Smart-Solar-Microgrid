@@ -1,3 +1,10 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: GridOperatorDashboard
+ * Description: Operational interface for Grid Operators to monitor battery slots, scan and verify prosumer QR codes, and finalize energy transfers.
+ */
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
@@ -8,6 +15,7 @@ import {
 import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
 import { apiUrl } from '../config';
+
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -589,6 +597,14 @@ export default function GridOperatorDashboard() {
           <button role="tab" aria-selected={activeTab === 'bookings'} className={`go-tab ${activeTab === 'bookings' ? 'active' : ''}`} onClick={() => setActiveTab('bookings')}>
             Bookings
           </button>
+          <button
+  role="tab"
+  aria-selected={activeTab === 'transactions'}
+  className={`go-tab ${activeTab === 'transactions' ? 'active' : ''}`}
+  onClick={() => navigate('/grid-operator/transactions')}
+>
+  Power Trading Transactions
+</button>
         </div>
 
         <div className="go-user">

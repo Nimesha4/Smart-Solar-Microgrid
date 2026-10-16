@@ -1,3 +1,11 @@
+// ============================================================================
+// Course: SE4040 - Enterprise Application Development
+// Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+// File: UsersController.cs
+// Description: REST Controller handling user registration, authentication, 
+//              role verification, and profile management with NIC primary key.
+// ============================================================================
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartSolar.Backend.Models;
@@ -13,15 +21,22 @@ namespace SmartSolar.Backend.Controllers
     {
         private readonly UserService _userService;
 
+        // Constructor: Injects the central UserService instance
         public UsersController(UserService userService)
         {
             _userService = userService;
         }
 
+        /// <summary>
+        /// Retrieves all registered user accounts from MongoDB.
+        /// </summary>
         [HttpGet]
         public async Task<List<User>> Get() =>
             await _userService.GetAsync();
 
+        /// <summary>
+        /// Retrieves a single user profile using their NIC as primary key.
+        /// </summary>
         [HttpGet("{nic}")]
         public async Task<ActionResult<User>> Get(string nic)
         {
@@ -33,6 +48,9 @@ namespace SmartSolar.Backend.Controllers
             return user;
         }
 
+        /// <summary>
+        /// Registers a new user. Enforces Prosumer role on public signup and checks NIC uniqueness.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] UserRegisterDto newUser)
         {
@@ -74,6 +92,9 @@ namespace SmartSolar.Backend.Controllers
             );
         }
 
+        /// <summary>
+        /// Authenticates user credentials against PBKDF2 hashed password and ensures account is active.
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto login)
         {
@@ -119,6 +140,9 @@ namespace SmartSolar.Backend.Controllers
             });
         }
 
+        /// <summary>
+        /// Updates profile information for an existing user while preserving security credentials.
+        /// </summary>
         [HttpPut("{nic}")]
         public async Task<IActionResult> Put(string nic, User updatedUser)
         {
@@ -137,6 +161,9 @@ namespace SmartSolar.Backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Deactivates a user account, preventing further logins until reactivated by Backoffice.
+        /// </summary>
         [HttpPut("deactivate/{nic}")]
         public async Task<IActionResult> Deactivate(string nic)
         {
@@ -148,6 +175,9 @@ namespace SmartSolar.Backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Reactivates a deactivated user account (Backoffice authorization).
+        /// </summary>
         [HttpPut("activate/{nic}")]
         public async Task<IActionResult> Activate(string nic)
         {
@@ -159,6 +189,9 @@ namespace SmartSolar.Backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Permanently deletes a user profile from the system.
+        /// </summary>
         [HttpDelete("{nic}")]
         public async Task<IActionResult> Delete(string nic)
         {

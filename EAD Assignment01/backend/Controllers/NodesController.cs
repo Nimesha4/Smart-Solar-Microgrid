@@ -1,3 +1,12 @@
+// ============================================================================
+// Course: SE4040 - Enterprise Application Development
+// Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+// File: NodesController.cs
+// Description: REST Controller managing Microgrid Nodes (Solar Grid Hubs),
+//              including capacity specs, battery slots, GPS coordinates,
+//              and reservation-dependent deactivation business rules.
+// ============================================================================
+
 using Microsoft.AspNetCore.Mvc;
 using SmartSolar.Backend.Models;
 using SmartSolar.Backend.Services;
@@ -13,16 +22,23 @@ namespace SmartSolar.Backend.Controllers
         private readonly MicrogridNodeService _nodeService;
         private readonly ReservationService _reservationService;
 
+        // Constructor: Injects node repository service and reservation service for rule validation
         public NodesController(MicrogridNodeService nodeService, ReservationService reservationService)
         {
             _nodeService = nodeService;
             _reservationService = reservationService;
         }
 
+        /// <summary>
+        /// Retrieves all registered solar microgrid hubs.
+        /// </summary>
         [HttpGet]
         public async Task<List<MicrogridNode>> Get() =>
             await _nodeService.GetAsync();
 
+        /// <summary>
+        /// Retrieves details of a specific microgrid hub by its unique ID.
+        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<MicrogridNode>> Get(string id)
         {
@@ -34,6 +50,9 @@ namespace SmartSolar.Backend.Controllers
             return node;
         }
 
+        /// <summary>
+        /// Registers a new microgrid hub with GPS coordinates, capacity, and available battery slots.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> Post(MicrogridNode newNode)
         {
@@ -41,6 +60,9 @@ namespace SmartSolar.Backend.Controllers
             return CreatedAtAction(nameof(Get), new { id = newNode.Id }, newNode);
         }
 
+        /// <summary>
+        /// Updates an existing microgrid hub's parameters (capacity, slots, schedule, or coordinates).
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, MicrogridNode updatedNode)
         {
@@ -53,6 +75,9 @@ namespace SmartSolar.Backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Deactivates a microgrid hub. Enforces assignment rule: blocks deactivation if active reservations exist.
+        /// </summary>
         [HttpPut("deactivate/{id}")]
         public async Task<IActionResult> Deactivate(string id)
         {
@@ -60,7 +85,7 @@ namespace SmartSolar.Backend.Controllers
             if (node is null)
                 return NotFound();
 
-            // Deactivation is blocked if active energy reservations exist
+            // Business Rule: Deactivation is blocked if active energy reservations exist
             var reservations = await _reservationService.GetAsync();
             var hasActiveReservations = reservations.Exists(r => 
                 r.MicrogridNodeId == id && 
@@ -73,6 +98,9 @@ namespace SmartSolar.Backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Removes a microgrid hub record permanently from the database.
+        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
