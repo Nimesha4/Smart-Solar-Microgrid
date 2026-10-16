@@ -12,7 +12,7 @@ using SmartSolar.Backend.Models;
 using SmartSolar.Backend.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
+using SmartSolar.Backend.Validators;
 namespace SmartSolar.Backend.Controllers
 {
     [ApiController]
@@ -55,14 +55,34 @@ namespace SmartSolar.Backend.Controllers
         public async Task<IActionResult> Post([FromBody] UserRegisterDto newUser)
         {
             if (newUser == null ||
-                string.IsNullOrWhiteSpace(newUser.Nic) ||
-                string.IsNullOrWhiteSpace(newUser.Password))
+    string.IsNullOrWhiteSpace(newUser.Nic) ||
+    string.IsNullOrWhiteSpace(newUser.Password))
             {
-                return BadRequest(new { message = "NIC and password are required." });
+                return BadRequest(new
+                {
+                    message = "NIC and password are required."
+                });
             }
 
-            var cleanNic = newUser.Nic.Trim();
+            string cleanNic = newUser.Nic.Trim();
+
+            if (!NicValidator.IsValid(cleanNic))
+            {
+                return BadRequest(new
+                {
+                    message = "Invalid NIC format. Use 9 digits followed by V/X, or 12 digits."
+                });
+            }
+
             var existing = await _userService.GetAsync(cleanNic);
+
+            if (existing is not null)
+            {
+                return Conflict(new
+                {
+                    message = "User with this NIC already exists."
+                });
+            }
             if (existing is not null)
                 return Conflict(new { message = "User with this NIC already exists." });
 
@@ -99,8 +119,8 @@ namespace SmartSolar.Backend.Controllers
         public async Task<IActionResult> Login([FromBody] UserLoginDto login)
         {
             if (login == null ||
-                string.IsNullOrWhiteSpace(login.Nic) ||
-                string.IsNullOrEmpty(login.Password))
+            string.IsNullOrWhiteSpace(login.Nic) ||
+            string.IsNullOrEmpty(login.Password))
             {
                 return BadRequest(new
                 {
@@ -108,8 +128,17 @@ namespace SmartSolar.Backend.Controllers
                 });
             }
 
-            var user = await _userService.GetAsync(login.Nic.Trim());
+            string cleanNic = login.Nic.Trim();
 
+            if (!NicValidator.IsValid(cleanNic))
+            {
+                return BadRequest(new
+                {
+                    message = "Invalid NIC format."
+                });
+            }
+
+            var user = await _userService.GetAsync(cleanNic);
             if (user == null ||
                 !PasswordHasher.VerifyHashedPassword(
                     user.PasswordHash,
@@ -146,6 +175,21 @@ namespace SmartSolar.Backend.Controllers
         [HttpPut("{nic}")]
         public async Task<IActionResult> Put(string nic, User updatedUser)
         {
+            if (!NicValidator.IsValid(nic))
+            {
+                return BadRequest(new
+                {
+                    message = "Invalid NIC format."
+                });
+            }
+
+            if (updatedUser == null)
+            {
+                return BadRequest(new
+                {
+                    message = "User data is required."
+                });
+            }
             var user = await _userService.GetAsync(nic);
             if (user is null)
                 return NotFound();
