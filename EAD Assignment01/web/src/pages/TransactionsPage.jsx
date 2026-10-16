@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 const API_BASE_URL =
   "https://smart-solar-microgrid.onrender.com/api";
 
+// Safely handle arrays returned directly or inside an object.
 function getArray(data, keys = []) {
   if (Array.isArray(data)) return data;
 
@@ -18,11 +19,9 @@ function getId(item) {
   return String(item?.id ?? item?._id ?? "");
 }
 
-function getReservationId(transaction) {
+function getReservationId(item) {
   return String(
-    transaction?.reservationId ??
-      transaction?.ReservationId ??
-      ""
+    item?.reservationId ?? item?.ReservationId ?? ""
   );
 }
 
@@ -70,6 +69,20 @@ function getTransactionStatus(item) {
   return item?.status ?? item?.Status ?? "Recorded";
 }
 
+function getBookingReference(id) {
+  return id ? id.slice(-6).toUpperCase() : "UNKNOWN";
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : date.toLocaleString();
+}
+
 async function readResponse(response) {
   const text = await response.text();
 
@@ -83,7 +96,9 @@ async function readResponse(response) {
 }
 
 function getErrorMessage(data, fallback) {
-  if (typeof data === "string" && data.trim()) return data;
+  if (typeof data === "string" && data.trim()) {
+    return data;
+  }
 
   return (
     data?.message ??
@@ -91,20 +106,6 @@ function getErrorMessage(data, fallback) {
     data?.title ??
     fallback
   );
-}
-
-function formatDate(value) {
-  if (!value) return "—";
-
-  const date = new Date(value);
-
-  return Number.isNaN(date.getTime())
-    ? String(value)
-    : date.toLocaleString();
-}
-
-function getBookingReference(id) {
-  return id ? id.slice(-6).toUpperCase() : "UNKNOWN";
 }
 
 export default function TransactionsPage() {
@@ -125,6 +126,7 @@ export default function TransactionsPage() {
     setError("");
 
     try {
+      // Load approved bookings independently of transactions.
       const reservationResponse = await fetch(
         `${API_BASE_URL}/reservations`
       );
@@ -156,6 +158,8 @@ export default function TransactionsPage() {
 
       setReservations(approvedBookings);
 
+      // Load transactions separately so a transaction API
+      // error does not hide the approved bookings.
       try {
         const transactionResponse = await fetch(
           `${API_BASE_URL}/transactions`
@@ -169,7 +173,7 @@ export default function TransactionsPage() {
           setTransactionsAvailable(false);
 
           setError(
-            `Bookings loaded, but transactions returned HTTP ${transactionResponse.status}. Deploy or fix the backend transactions endpoint.`
+            `Bookings loaded, but the transactions API returned HTTP ${transactionResponse.status}. Deploy or fix the backend endpoint.`
           );
         } else {
           setTransactions(
@@ -197,6 +201,7 @@ export default function TransactionsPage() {
       setReservations([]);
       setTransactions([]);
       setTransactionsAvailable(false);
+
       setError(err.message || "Unable to load bookings.");
     } finally {
       setPageLoading(false);
@@ -236,7 +241,7 @@ export default function TransactionsPage() {
       (item) => getId(item) === selectedId
     );
 
-    // Automatically use the QR token already stored on the booking.
+    // Retrieve the existing token from the selected booking.
     setQrCodeData(booking ? getQrToken(booking) : "");
   };
 
@@ -247,7 +252,7 @@ export default function TransactionsPage() {
 
     if (!transactionsAvailable) {
       setError(
-        "The transactions API is unavailable. Fix and deploy the backend endpoint first."
+        "The transactions API is unavailable. Deploy or fix the backend endpoint first."
       );
       return;
     }
@@ -259,14 +264,14 @@ export default function TransactionsPage() {
 
     if (isAlreadyRecorded(selectedBooking)) {
       setError(
-        "A transaction already exists for this booking."
+        "A transaction has already been recorded for this booking."
       );
       return;
     }
 
     if (!qrCodeData.trim()) {
       setError(
-        "The selected booking did not return its QR token. The backend must provide the existing token securely."
+        "The QR token was not returned by the booking API. The backend must provide the existing token securely."
       );
       return;
     }
@@ -379,9 +384,8 @@ export default function TransactionsPage() {
         </h2>
 
         <p style={styles.description}>
-          Identify the booking using the prosumer, node, and
-          energy amount. The short reference helps distinguish
-          bookings without displaying the full database ID.
+          Select a booking using the Prosumer NIC and energy
+          amount. The short reference helps distinguish bookings.
         </p>
 
         <label style={styles.label} htmlFor="reservation">
@@ -411,7 +415,7 @@ export default function TransactionsPage() {
                 value={id}
                 disabled={!id || recorded}
               >
-                {`Prosumer: ${getNic(booking)} | Node: ${getNodeId(booking)} | Energy: ${getEnergy(booking)} kWh | Ref: ${getBookingReference(id)}${recorded ? " | Already recorded" : ""}`}
+                {`Prosumer: ${getNic(booking)} | Energy: ${getEnergy(booking)} kWh | Ref: ${getBookingReference(id)}${recorded ? " | Already recorded" : ""}`}
               </option>
             );
           })}
@@ -467,6 +471,15 @@ export default function TransactionsPage() {
                 Approved
               </strong>
             </div>
+
+            <div style={styles.detailItem}>
+              <span>Transaction Status</span>
+              <strong>
+                {isAlreadyRecorded(selectedBooking)
+                  ? "Already Recorded"
+                  : "Not Yet Recorded"}
+              </strong>
+            </div>
           </div>
 
           <div style={styles.qrPanel}>
@@ -482,14 +495,13 @@ export default function TransactionsPage() {
               {qrCodeData ? (
                 <p style={styles.successText}>
                   Existing QR token retrieved automatically.
-                  The backend will validate it when you submit.
+                  The backend will validate it when submitted.
                 </p>
               ) : (
                 <p style={styles.warningText}>
-                  The booking response does not contain a QR
-                  token. The backend must expose the existing
-                  token securely before this transaction can
-                  be submitted.
+                  The booking API did not return a QR token.
+                  The backend must provide the existing token
+                  securely before the transaction can be recorded.
                 </p>
               )}
             </div>
@@ -515,9 +527,8 @@ export default function TransactionsPage() {
             />
 
             <p style={styles.helpText}>
-              The token is hidden for security. It will be
-              submitted automatically when you record the
-              transaction.
+              The token is hidden for security. When it is
+              available, it is submitted automatically.
             </p>
 
             <button
