@@ -21,10 +21,15 @@ namespace SmartSolar.Backend.Controllers
             _reservationService = reservationService;
         }
 
+        // GET: api/Transactions
         [HttpGet]
-        public async Task<List<Transaction>> Get() =>
-            await _transactionService.GetAsync();
+        public async Task<ActionResult<List<Transaction>>> Get()
+        {
+            var transactions = await _transactionService.GetAsync();
+            return Ok(transactions);
+        }
 
+        // POST: api/Transactions
         [HttpPost]
         public async Task<IActionResult> Create(
             [FromBody] CreateTransactionRequest request)
@@ -38,17 +43,23 @@ namespace SmartSolar.Backend.Controllers
             }
 
             if (!ObjectId.TryParse(request.ReservationId, out _))
+            {
                 return BadRequest("Invalid reservation ID.");
+            }
 
             var reservation = await _reservationService
                 .GetAsync(request.ReservationId);
 
             if (reservation == null)
+            {
                 return NotFound("Reservation not found.");
+            }
 
             if (reservation.Status != "Approved")
+            {
                 return BadRequest(
                     "Only approved reservations can be recorded.");
+            }
 
             if (string.IsNullOrWhiteSpace(reservation.QrCodeData) ||
                 !string.Equals(
@@ -63,8 +74,10 @@ namespace SmartSolar.Backend.Controllers
                 .GetByReservationIdAsync(reservation.Id!);
 
             if (existing != null)
+            {
                 return Conflict(
                     "A transaction already exists for this reservation.");
+            }
 
             var transaction = new Transaction
             {
@@ -81,6 +94,37 @@ namespace SmartSolar.Backend.Controllers
             return Created(
                 $"/api/transactions/{transaction.Id}",
                 transaction);
+        }
+
+        // DELETE: api/Transactions/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            if (!ObjectId.TryParse(id, out _))
+            {
+                return BadRequest("Invalid transaction ID.");
+            }
+
+            var transaction = await _transactionService.GetByIdAsync(id);
+
+            if (transaction == null)
+            {
+                return NotFound("Transaction not found.");
+            }
+
+            var deleted = await _transactionService.DeleteAsync(id);
+
+            if (!deleted)
+            {
+                return NotFound(
+                    "Transaction could not be deleted because it was not found.");
+            }
+
+            return Ok(new
+            {
+                message = "Transaction deleted successfully.",
+                id = id
+            });
         }
     }
 }

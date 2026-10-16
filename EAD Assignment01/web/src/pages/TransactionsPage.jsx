@@ -1,11 +1,53 @@
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Sun, RefreshCw, Zap, CheckCircle2, Clock3 } from "lucide-react";
+import {
+  Sun,
+  RefreshCw,
+  Zap,
+  CheckCircle2,
+  Clock3,
+  Trash2,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import HeaderMenu from "../components/HeaderMenu";
 import "../App.css";
 
 const API_BASE_URL = "https://smart-solar-microgrid.onrender.com/api";
+
+const getReservationId = (reservation) =>
+  String(reservation?.id ?? reservation?._id ?? reservation?.reservationId ?? "");
+
+const getTransactionId = (transaction) =>
+  String(transaction?.id ?? transaction?._id ?? transaction?.transactionId ?? "");
+
+const getStatus = (reservation) =>
+  String(reservation?.status ?? reservation?.Status ?? "").toLowerCase();
+
+const getBookingLabel = (reservation) => {
+  const energy =
+    reservation?.energyAmountKwh ??
+    reservation?.energyKwh ??
+    reservation?.EnergyAmountKwh;
+
+  const dateValue =
+    reservation?.reservationDate ??
+    reservation?.bookingDate ??
+    reservation?.createdAt;
+
+  let date = "";
+
+  if (dateValue) {
+    const parsed = new Date(dateValue);
+    date = Number.isNaN(parsed.getTime())
+      ? String(dateValue)
+      : parsed.toLocaleDateString();
+  }
+
+  return [
+    date ? `Booking on ${date}` : "Approved energy booking",
+    energy != null ? `${energy} kWh` : "Energy not specified",
+  ].join(" · ");
+};
 
 export default function TransactionsPage() {
   const navigate = useNavigate();
@@ -15,64 +57,91 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
   const [reservationId, setReservationId] = useState("");
   const [qrCodeData, setQrCodeData] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState("");
   const [error, setError] = useState("");
+  const [transactionError, setTransactionError] = useState("");
   const [message, setMessage] = useState("");
+
+  const selectedReservation = reservations.find(
+    (reservation) => getReservationId(reservation) === reservationId
+  );
+
+  const isAlreadyRecorded = (id) =>
+    transactions.some(
+      (transaction) =>
+        String(
+          transaction.reservationId ?? transaction.ReservationId ?? ""
+        ) === String(id)
+    );
 
   const loadData = useCallback(async () => {
     setPageLoading(true);
     setError("");
+    setTransactionError("");
 
+    // Load bookings independently from transaction history.
     try {
-      // Load bookings independently so a missing transactions endpoint
-      // does not prevent approved bookings from being displayed.
-      const reservationResponse = await fetch(
-        `${API_BASE_URL}/reservations`
-      );
+      const response = await fetch(`${API_BASE_URL}/reservations`);
 
-      if (!reservationResponse.ok) {
-        throw new Error(
-          `Unable to load bookings (HTTP ${reservationResponse.status}).`
-        );
+      if (!response.ok) {
+        throw new Error(`Unable to load bookings (HTTP ${response.status}).`);
       }
 
-      const reservationResult = await reservationResponse.json();
+      const result = await response.json();
 
-      const reservationList = Array.isArray(reservationResult)
-        ? reservationResult
-        : reservationResult?.reservations ??
-          reservationResult?.data ??
+      const list = Array.isArray(result)
+        ? result
+        : result?.reservations ??
+          result?.data ??
+          result?.Reservations ??
           [];
 
-      const approvedReservations = reservationList.filter(
-        (reservation) =>
-          String(reservation.status ?? "").toLowerCase() === "approved"
+      const approved = list.filter(
+        (reservation) => getStatus(reservation) === "approved"
       );
 
-      setReservations(approvedReservations);
+      setReservations(approved);
 
-      // Load transactions separately.
-      const transactionResponse = await fetch(
-        `${API_BASE_URL}/transactions`
+      setReservationId((currentId) =>
+        approved.some(
+          (reservation) => getReservationId(reservation) === currentId
+        )
+          ? currentId
+          : ""
       );
+    } catch (err) {
+      setReservations([]);
+      setError(err.message || "Unable to load bookings.");
+    }
 
-      if (transactionResponse.ok) {
-        const transactionResult = await transactionResponse.json();
+    // Load transactions independently.
+    try {
+      const response = await fetch(`${API_BASE_URL}/transactions`);
 
-        setTransactions(
-          Array.isArray(transactionResult) ? transactionResult : []
-        );
-      } else {
-        setTransactions([]);
-        setError(
-          `Approved bookings loaded, but transaction records could not be loaded (HTTP ${transactionResponse.status}). Check that the backend TransactionsController is deployed.`
+      if (!response.ok) {
+        throw new Error(
+          `Transaction history unavailable (HTTP ${response.status}).`
         );
       }
+
+      const result = await response.json();
+
+      setTransactions(
+        Array.isArray(result)
+          ? result
+          : result?.transactions ??
+              result?.data ??
+              result?.Transactions ??
+              []
+      );
     } catch (err) {
-      setError(err.message || "Unable to connect to the backend.");
-      setReservations([]);
       setTransactions([]);
+      setTransactionError(
+        `${err.message || "Unable to load transaction history."} Check that the backend TransactionsController is deployed.`
+      );
     } finally {
       setPageLoading(false);
     }
@@ -81,41 +150,6 @@ export default function TransactionsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const selectedReservation = reservations.find(
-    (reservation) => reservation.id === reservationId
-  );
-
-  const getReservationId = (reservation) =>
-    reservation.id ?? reservation._id ?? "";
-
-  const isAlreadyRecorded = (id) =>
-    transactions.some(
-      (transaction) =>
-        String(transaction.reservationId) === String(id)
-    );
-
-  const getBookingLabel = (reservation) => {
-    const energy = reservation.energyAmountKwh ?? reservation.energyKwh;
-    const dateValue =
-      reservation.reservationDate ??
-      reservation.bookingDate ??
-      reservation.createdAt;
-
-    const date = dateValue
-      ? new Date(dateValue).toLocaleDateString()
-      : "";
-
-    const energyText =
-      energy !== undefined && energy !== null
-        ? `${energy} kWh`
-        : "Energy not specified";
-
-    return [
-      date ? `Booking on ${date}` : "Approved energy booking",
-      energyText,
-    ].join(" · ");
-  };
 
   const handleBookingChange = (event) => {
     setReservationId(event.target.value);
@@ -129,8 +163,13 @@ export default function TransactionsPage() {
     setError("");
     setMessage("");
 
-    if (!reservationId || !qrCodeData.trim()) {
-      setError("Select an approved booking and provide its QR verification token.");
+    if (!reservationId) {
+      setError("Please select an approved booking.");
+      return;
+    }
+
+    if (!qrCodeData.trim()) {
+      setError("Please enter the booking's QR verification token.");
       return;
     }
 
@@ -156,14 +195,12 @@ export default function TransactionsPage() {
       const result = await response.json().catch(() => null);
 
       if (!response.ok) {
-        const errorMessage =
-          typeof result === "string"
-            ? result
-            : result?.message ??
-              result?.title ??
-              `Transaction creation failed (HTTP ${response.status}).`;
-
-        throw new Error(errorMessage);
+        throw new Error(
+          result?.message ??
+            result?.Message ??
+            result?.title ??
+            `Transaction creation failed (HTTP ${response.status}).`
+        );
       }
 
       setMessage("Transaction recorded successfully.");
@@ -178,17 +215,82 @@ export default function TransactionsPage() {
     }
   };
 
+  // Delete a transaction from the backend after confirmation.
+  const deleteTransaction = async (transaction) => {
+    const id = getTransactionId(transaction);
+
+    if (!id) {
+      setError("Cannot delete this transaction because its ID is missing.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this transaction? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    setDeletingId(id);
+    setError("");
+    setTransactionError("");
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/transactions/${encodeURIComponent(id)}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        const responseText = await response.text();
+
+        let errorMessage = responseText;
+
+        try {
+          const result = JSON.parse(responseText);
+          errorMessage =
+            result?.message ??
+            result?.Message ??
+            result?.title ??
+            responseText;
+        } catch {
+          // The response may be plain text.
+        }
+
+        throw new Error(
+          errorMessage || `Delete failed (HTTP ${response.status}).`
+        );
+      }
+
+      // Remove it from the UI only after the server confirms success.
+      setTransactions((current) =>
+        current.filter((item) => getTransactionId(item) !== id)
+      );
+
+      setMessage("Transaction deleted successfully.");
+    } catch (err) {
+      setError(err.message || "Unable to delete the transaction.");
+    } finally {
+      setDeletingId("");
+    }
+  };
+
   const totalEnergy = transactions.reduce(
     (total, transaction) =>
-      total + Number(transaction.energyAmountKwh ?? 0),
+      total +
+      Number(
+        transaction.energyAmountKwh ??
+          transaction.EnergyAmountKwh ??
+          transaction.energyKwh ??
+          0
+      ),
     0
   );
 
-  const recordedCount = transactions.length;
-
   return (
     <div className="transaction-page">
-      {/* Shared-style header with your existing hamburger menu */}
       <header className="transaction-header">
         <button
           type="button"
@@ -209,31 +311,27 @@ export default function TransactionsPage() {
         <nav className="transaction-nav" aria-label="Grid Operator navigation">
           <button
             type="button"
-            className={
-              location.pathname.includes("battery-slots")
-                ? "transaction-nav-link active"
-                : "transaction-nav-link"
-            }
-            onClick={() => navigate("/grid-operator/battery-slots")}
+            className="transaction-nav-link"
+            onClick={() => navigate("/operator#battery-slots")}
           >
             Battery Slots
           </button>
 
           <button
             type="button"
-            className={
-              location.pathname.includes("bookings")
-                ? "transaction-nav-link active"
-                : "transaction-nav-link"
-            }
-            onClick={() => navigate("/grid-operator/bookings")}
+            className="transaction-nav-link"
+            onClick={() => navigate("/operator#bookings")}
           >
             Bookings
           </button>
 
           <button
             type="button"
-            className="transaction-nav-link active"
+            className={
+              location.pathname === "/grid-operator/transactions"
+                ? "transaction-nav-link active"
+                : "transaction-nav-link"
+            }
             onClick={() => navigate("/grid-operator/transactions")}
             aria-current="page"
           >
@@ -247,7 +345,6 @@ export default function TransactionsPage() {
       </header>
 
       <main className="transaction-content">
-        {/* Page introduction */}
         <section className="transaction-hero">
           <div>
             <div className="transaction-eyebrow">
@@ -257,8 +354,8 @@ export default function TransactionsPage() {
             <h1>Power Trading Transactions</h1>
 
             <p>
-              Verify approved energy bookings and maintain a reliable record
-              of completed power trading transactions.
+              Verify approved energy bookings and maintain a record of
+              power trading transactions.
             </p>
           </div>
 
@@ -266,7 +363,7 @@ export default function TransactionsPage() {
             type="button"
             className="transaction-refresh-button"
             onClick={loadData}
-            disabled={pageLoading}
+            disabled={pageLoading || Boolean(deletingId)}
           >
             <RefreshCw
               size={16}
@@ -276,11 +373,23 @@ export default function TransactionsPage() {
           </button>
         </section>
 
-        {/* Status messages */}
         {error && (
-          <div className="transaction-alert transaction-alert-error" role="alert">
+          <div
+            className="transaction-alert transaction-alert-error"
+            role="alert"
+          >
             <strong>Attention</strong>
             <span>{error}</span>
+          </div>
+        )}
+
+        {transactionError && (
+          <div
+            className="transaction-alert transaction-alert-error"
+            role="status"
+          >
+            <strong>Transaction history</strong>
+            <span>{transactionError}</span>
           </div>
         )}
 
@@ -294,19 +403,14 @@ export default function TransactionsPage() {
           </div>
         )}
 
-        {/* Summary cards */}
         <section className="transaction-stats">
           <article className="transaction-stat-card">
             <div className="transaction-stat-icon orange">
               <Zap size={22} />
             </div>
             <div>
-              <span className="transaction-stat-label">
-                Approved bookings
-              </span>
-              <strong>
-                {pageLoading ? "—" : reservations.length}
-              </strong>
+              <span className="transaction-stat-label">Approved bookings</span>
+              <strong>{pageLoading ? "—" : reservations.length}</strong>
               <small>Available for verification</small>
             </div>
           </article>
@@ -319,7 +423,7 @@ export default function TransactionsPage() {
               <span className="transaction-stat-label">
                 Recorded transactions
               </span>
-              <strong>{pageLoading ? "—" : recordedCount}</strong>
+              <strong>{pageLoading ? "—" : transactions.length}</strong>
               <small>Saved transaction records</small>
             </div>
           </article>
@@ -329,9 +433,7 @@ export default function TransactionsPage() {
               <Zap size={22} />
             </div>
             <div>
-              <span className="transaction-stat-label">
-                Recorded energy
-              </span>
+              <span className="transaction-stat-label">Recorded energy</span>
               <strong>
                 {pageLoading ? "—" : totalEnergy.toLocaleString()}{" "}
                 <span className="transaction-unit">kWh</span>
@@ -341,15 +443,13 @@ export default function TransactionsPage() {
           </article>
         </section>
 
-        {/* Booking verification */}
         <section className="transaction-panel">
           <div className="transaction-panel-heading">
             <div className="transaction-step-number">1</div>
             <div>
               <h2>Select an Approved Booking</h2>
               <p>
-                Choose a booking to view its details and enter its existing
-                QR verification token.
+                Select a booking and provide its QR verification token.
               </p>
             </div>
           </div>
@@ -360,10 +460,7 @@ export default function TransactionsPage() {
             </div>
           ) : (
             <form onSubmit={createTransaction}>
-              <label
-                className="transaction-label"
-                htmlFor="approvedBooking"
-              >
+              <label className="transaction-label" htmlFor="approvedBooking">
                 Approved booking
               </label>
 
@@ -399,8 +496,7 @@ export default function TransactionsPage() {
                     <div>
                       <strong>Selected booking details</strong>
                       <span>
-                        Booking selected successfully. Confirm the details
-                        before recording the transaction.
+                        Confirm the booking details before recording.
                       </span>
                     </div>
                   </div>
@@ -409,7 +505,9 @@ export default function TransactionsPage() {
                     <div className="transaction-detail-item">
                       <span>Booking reference</span>
                       <strong>
-                        {String(getReservationId(selectedReservation)).slice(-8).toUpperCase()}
+                        {getReservationId(selectedReservation)
+                          .slice(-8)
+                          .toUpperCase()}
                       </strong>
                     </div>
 
@@ -440,7 +538,6 @@ export default function TransactionsPage() {
                     <h2>Verify QR Token</h2>
                     <p>
                       Enter the token encoded in the booking's QR code.
-                      The backend validates it before creating a transaction.
                     </p>
                   </div>
                 </div>
@@ -455,15 +552,14 @@ export default function TransactionsPage() {
                   type="password"
                   value={qrCodeData}
                   onChange={(event) => setQrCodeData(event.target.value)}
-                  placeholder="Enter or scan the QR verification token"
+                  placeholder="Enter the QR verification token"
                   autoComplete="off"
                   required
                 />
 
                 <small className="transaction-help-text">
-                  For security, the token is not displayed in the booking
-                  dropdown. Selecting a booking alone cannot retrieve a token
-                  unless your backend provides a dedicated authorized endpoint.
+                  The backend must validate this token against the selected
+                  booking.
                 </small>
               </div>
 
@@ -484,7 +580,9 @@ export default function TransactionsPage() {
                 <button
                   type="submit"
                   className="transaction-primary-button"
-                  disabled={loading || !reservationId || !qrCodeData.trim()}
+                  disabled={
+                    loading || !reservationId || !qrCodeData.trim()
+                  }
                 >
                   {loading ? (
                     "Verifying booking..."
@@ -504,13 +602,12 @@ export default function TransactionsPage() {
               <Clock3 size={24} />
               <strong>No approved bookings available</strong>
               <span>
-                Once a booking has been approved, it will appear here.
+                Once a booking is approved, it will appear here.
               </span>
             </div>
           )}
         </section>
 
-        {/* Transaction history */}
         <section className="transaction-panel">
           <div className="transaction-history-heading">
             <div className="transaction-panel-heading">
@@ -519,7 +616,9 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <h2>Transaction History</h2>
-                <p>Review the energy transactions recorded in the system.</p>
+                <p>
+                  Review and manage recorded energy transactions.
+                </p>
               </div>
             </div>
 
@@ -539,7 +638,7 @@ export default function TransactionsPage() {
               </div>
               <strong>No transaction records yet</strong>
               <span>
-                Verified transactions will appear here after they are saved.
+                Transactions will appear here after they are recorded.
               </span>
             </div>
           ) : (
@@ -553,48 +652,93 @@ export default function TransactionsPage() {
                     <th>Energy</th>
                     <th>Transaction time</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {transactions.map((transaction) => (
-                    <tr key={transaction.id ?? transaction._id}>
-                      <td>
-                        <span className="transaction-reference">
+                  {transactions.map((transaction, index) => {
+                    const id = getTransactionId(transaction);
+                    const transactionTime =
+                      transaction.transactionTime ??
+                      transaction.TransactionTime ??
+                      transaction.createdAt ??
+                      transaction.CreatedAt;
+
+                    return (
+                      <tr key={id || index}>
+                        <td>
+                          <span className="transaction-reference">
+                            {id ? id.slice(-8).toUpperCase() : "—"}
+                          </span>
+                        </td>
+
+                        <td>
                           {String(
-                            transaction.id ?? transaction._id ?? "—"
-                          ).slice(-8).toUpperCase()}
-                        </span>
-                      </td>
+                            transaction.reservationId ??
+                              transaction.ReservationId ??
+                              "—"
+                          )
+                            .slice(-8)
+                            .toUpperCase()}
+                        </td>
 
-                      <td>
-                        {String(transaction.reservationId ?? "—")
-                          .slice(-8)
-                          .toUpperCase()}
-                      </td>
+                        <td>
+                          {transaction.prosumerNic ??
+                            transaction.ProsumerNic ??
+                            "—"}
+                        </td>
 
-                      <td>{transaction.prosumerNic ?? "—"}</td>
+                        <td className="transaction-energy">
+                          {transaction.energyAmountKwh ??
+                            transaction.EnergyAmountKwh ??
+                            "—"}{" "}
+                          kWh
+                        </td>
 
-                      <td className="transaction-energy">
-                        {transaction.energyAmountKwh ?? "—"} kWh
-                      </td>
+                        <td>
+                          {transactionTime
+                            ? new Date(transactionTime).toLocaleString()
+                            : "—"}
+                        </td>
 
-                      <td>
-                        {transaction.transactionTime
-                          ? new Date(
-                              transaction.transactionTime
-                            ).toLocaleString()
-                          : "—"}
-                      </td>
+                        <td>
+                          <span className="transaction-status-badge">
+                            <span className="transaction-status-dot" />
+                            {transaction.status ??
+                              transaction.Status ??
+                              "Recorded"}
+                          </span>
+                        </td>
 
-                      <td>
-                        <span className="transaction-status-badge">
-                          <span className="transaction-status-dot" />
-                          {transaction.status ?? "Recorded"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                        <td>
+                          <button
+                            type="button"
+                            className="transaction-delete-button"
+                            onClick={() => deleteTransaction(transaction)}
+                            disabled={!id || Boolean(deletingId)}
+                            aria-label={`Delete transaction ${id}`}
+                            title="Delete transaction"
+                          >
+                            {deletingId === id ? (
+                              <>
+                                <RefreshCw
+                                  size={15}
+                                  className="transaction-spinning"
+                                />
+                                Deleting...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 size={15} />
+                                Delete
+                              </>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

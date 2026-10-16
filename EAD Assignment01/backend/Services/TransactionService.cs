@@ -20,16 +20,36 @@ namespace SmartSolar.Backend.Services
                 config.TransactionsCollectionName);
         }
 
+        // Create a new transaction
         public async Task CreateAsync(Transaction transaction) =>
             await _transactions.InsertOneAsync(transaction);
 
+        // Get a transaction by its reservation ID
         public async Task<Transaction?> GetByReservationIdAsync(
             string reservationId) =>
             await _transactions
                 .Find(t => t.ReservationId == reservationId)
                 .FirstOrDefaultAsync();
 
+        // Get a transaction by its MongoDB ID
+        public async Task<Transaction?> GetByIdAsync(string id) =>
+            await _transactions
+                .Find(t => t.Id == id)
+                .FirstOrDefaultAsync();
+
+        // Get all transactions
         public async Task<List<Transaction>> GetAsync() =>
-            await _transactions.Find(_ => true).ToListAsync();
+            await _transactions
+                .Find(_ => true)
+                .ToListAsync();
+
+        // Delete a transaction by its MongoDB ID
+        public async Task<bool> DeleteAsync(string id)
+        {
+            var result = await _transactions.DeleteOneAsync(
+                t => t.Id == id);
+
+            return result.DeletedCount > 0;
+        }
     }
 }
