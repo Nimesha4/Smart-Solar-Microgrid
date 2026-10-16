@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { X, CalendarClock, Check, AlertCircle, Zap, MapPin, ShieldCheck } from 'lucide-react';
 
 /**
- * EditReservationModal handles editing reservation details including node, energy amount, and date.
+ * EditReservationModal  handles editing reservation details including node, energy amount, and date.
  */
 export default function EditReservationModal({ reservation, nodes = [], onClose, onSave }) {
   // Formats ISO date string to datetime-local input format
