@@ -1,3 +1,10 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: Login
+ * Description: Authentication interface supporting role-based redirection for Backoffice, GridOperator, and Prosumer.
+ */
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';

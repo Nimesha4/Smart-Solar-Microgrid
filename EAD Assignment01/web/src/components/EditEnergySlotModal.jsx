@@ -1,7 +1,18 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: EditEnergySlotModal
+ * Description: Modal dialog for managing and editing available energy trading time slots, battery capacity, and rates.
+ */
+
 import React, { useState } from 'react';
 import { X, Clock, Check, AlertCircle, Zap, BatteryCharging, Trash2 } from 'lucide-react';
 
+/**
+ * EditEnergySlotModal allows backoffice operators to view, update, or remove trading slots.
+ */
 export default function EditEnergySlotModal({ slot, nodes = [], onClose, onSave, onDelete }) {
+  // Local state for slot timing, capacity specs, and associated hub
   const [hubId, setHubId] = useState(slot?.hubId || '');
   const [date, setDate] = useState(slot?.date || new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState(slot?.startTime || '08:00');
@@ -14,6 +25,7 @@ export default function EditEnergySlotModal({ slot, nodes = [], onClose, onSave,
 
   if (!slot) return null;
 
+  // Validate inputs and propagate updated energy slot data to parent
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');

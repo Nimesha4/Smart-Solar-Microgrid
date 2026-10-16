@@ -1,3 +1,11 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: ProsumerDashboard
+ * Description: Prosumer dashboard for reserving energy drop-off/charging slots, managing bookings (7-day rule, 12-hour rule),
+ *              retrieving cryptographic QR tokens, and locating microgrid hubs via Google Maps.
+ */
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';

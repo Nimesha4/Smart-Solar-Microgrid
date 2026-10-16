@@ -1,16 +1,29 @@
+// ============================================================================
+// Course: SE4040 - Enterprise Application Development
+// Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+// File: PasswordHasher.cs
+// Description: PBKDF2 cryptographic password hashing and verification utility.
+// ============================================================================
+
 using System;
 using System.Security.Cryptography;
 
 namespace SmartSolar.Backend.Services
 {
-    // PBKDF2-based password hasher. Produces a string containing:
-    // {iterations}.{base64Salt}.{base64Subkey}
+    /// <summary>
+    /// PBKDF2-based password hasher producing formatted hashes: {iterations}.{base64Salt}.{base64Subkey}
+    /// </summary>
     public static class PasswordHasher
     {
-        private const int SaltSize = 16; // 128 bit
-        private const int SubkeySize = 32; // 256 bit
+        private const int SaltSize = 16; // 128 bit salt
+        private const int SubkeySize = 32; // 256 bit derived key
         private const int IterationCount = 10000;
 
+        /// <summary>
+        /// Generates a cryptographically secure PBKDF2 hash with a random salt for a plaintext password.
+        /// </summary>
+        /// <param name="password">The plaintext password to hash.</param>
+        /// <returns>Formatted string containing iterations, salt, and subkey.</returns>
         public static string HashPassword(string password)
         {
             var salt = RandomNumberGenerator.GetBytes(SaltSize);
@@ -19,6 +32,12 @@ namespace SmartSolar.Backend.Services
             return $"{IterationCount}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(subkey)}";
         }
 
+        /// <summary>
+        /// Verifies a plaintext password against a stored PBKDF2 hash using constant-time comparison.
+        /// </summary>
+        /// <param name="hashedPassword">The stored password hash.</param>
+        /// <param name="providedPassword">The user-provided plaintext password.</param>
+        /// <returns>True if the password matches; otherwise, false.</returns>
         public static bool VerifyHashedPassword(string hashedPassword, string providedPassword)
         {
             if (string.IsNullOrEmpty(hashedPassword) || string.IsNullOrEmpty(providedPassword))

@@ -1,3 +1,10 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: GridOperatorDashboard
+ * Description: Operational interface for Grid Operators to monitor battery slots, scan and verify prosumer QR codes, and finalize energy transfers.
+ */
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';

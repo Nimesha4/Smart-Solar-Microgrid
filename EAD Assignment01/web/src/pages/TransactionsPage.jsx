@@ -1,4 +1,11 @@
 
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: TransactionsPage
+ * Description: Energy transfer transactions ledger and audit report page for Grid Operators and Backoffice.
+ */
+
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Sun,

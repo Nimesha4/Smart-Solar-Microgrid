@@ -1,5 +1,15 @@
+// ============================================================================
+// Course: SE4040 - Enterprise Application Development
+// Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+// File: UserRegisterDto.cs
+// Description: DTO transfer object for user account registration.
+// ============================================================================
+
 namespace SmartSolar.Backend.Models
 {
+    /// <summary>
+    /// User registration transfer object encapsulating NIC primary key and initial account details.
+    /// </summary>
     public class UserRegisterDto
     {
         // NIC used as primary key

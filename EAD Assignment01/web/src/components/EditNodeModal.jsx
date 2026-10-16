@@ -1,7 +1,18 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: EditNodeModal
+ * Description: Modal dialog for editing solar microgrid hub specifications, capacity, battery slots, and GPS coordinates.
+ */
+
 import React, { useState } from 'react';
 import { X, Zap, Check, AlertCircle } from 'lucide-react';
 
+/**
+ * EditNodeModal allows backoffice operators to maintain hub location, capacity, and operating schedules.
+ */
 export default function EditNodeModal({ node, onClose, onSave }) {
+  // Local state for hub properties (name, capacity, battery slots, schedule, coordinates)
   const [name, setName] = useState(node?.name || '');
   const [capacityKwh, setCapacityKwh] = useState(node?.capacityKwh ?? '');
   const [availableBatterySlots, setAvailableBatterySlots] = useState(node?.availableBatterySlots ?? '');
@@ -14,6 +25,7 @@ export default function EditNodeModal({ node, onClose, onSave }) {
 
   if (!node) return null;
 
+  // Validate node input fields before saving
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');

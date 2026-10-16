@@ -1,7 +1,18 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: MicrogridGoogleMap
+ * Description: Interactive Google Maps integration component visualizing solar microgrid hubs with GPS pinpoints and specs.
+ */
+
 import React, { useState } from 'react';
 import { MapPin, Navigation, ExternalLink, Zap, BatteryCharging, Clock, Layers, ZoomIn, ZoomOut, Check, Sliders } from 'lucide-react';
 
+/**
+ * MicrogridGoogleMap displays hub coordinates, zoom controls, and hub inspection details.
+ */
 export default function MicrogridGoogleMap({ nodes = [], onEditNode = null, initialSelectedId = null }) {
+  // Local state for active hub selection, map zoom level, and view mode (roadmap vs satellite)
   const [selectedHubId, setSelectedHubId] = useState(
     initialSelectedId || (nodes.length > 0 ? nodes[0].id : null)
   );
@@ -13,7 +24,7 @@ export default function MicrogridGoogleMap({ nodes = [], onEditNode = null, init
   const lat = selectedHub?.latitude ?? 6.9271;
   const lng = selectedHub?.longitude ?? 79.8612;
 
-  // Google Maps embed URL (Zero-config, 100% free, no API key required)
+  // Google Maps embed URL dynamically bound to current hub coordinates
   const embedUrl = `https://maps.google.com/maps?q=${lat},${lng}&t=${mapType}&z=${zoom}&ie=UTF8&iwloc=&output=embed`;
 
   return (

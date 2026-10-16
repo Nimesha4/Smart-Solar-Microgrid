@@ -1,3 +1,12 @@
+// ============================================================================
+// Course: SE4040 - Enterprise Application Development
+// Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+// File: ReservationsController.cs
+// Description: REST Controller managing Energy Slot Reservations, enforcing
+//              core business logic (7-day advance booking window, 12-hour
+//              notice for updates/cancellations, and secure QR dispatch).
+// ============================================================================
+
 using Microsoft.AspNetCore.Mvc;
 using SmartSolar.Backend.Models;
 using SmartSolar.Backend.Services;
@@ -13,15 +22,22 @@ namespace SmartSolar.Backend.Controllers
     {
         private readonly ReservationService _reservationService;
 
+        // Constructor: Injects central ReservationService
         public ReservationsController(ReservationService reservationService)
         {
             _reservationService = reservationService;
         }
 
+        /// <summary>
+        /// Retrieves all energy trading reservations across the microgrid network.
+        /// </summary>
         [HttpGet]
         public async Task<List<Reservation>> Get() =>
             await _reservationService.GetAsync();
 
+        /// <summary>
+        /// Retrieves a specific reservation by its unique identifier.
+        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<Reservation>> Get(string id)
         {
@@ -31,14 +47,20 @@ namespace SmartSolar.Backend.Controllers
             return res;
         }
         
+        /// <summary>
+        /// Retrieves all energy reservations associated with a specific Prosumer NIC.
+        /// </summary>
         [HttpGet("prosumer/{nic}")]
         public async Task<List<Reservation>> GetByProsumer(string nic) =>
             await _reservationService.GetByProsumerAsync(nic);
 
+        /// <summary>
+        /// Creates a new energy drop-off booking. Enforces the 7-day future booking window rule.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> Post(Reservation newRes)
         {
-            // Must be scheduled within 7 days
+            // Business Rule: Must be scheduled in the future and within 7 days
             if (newRes.ScheduledTime > DateTime.UtcNow.AddDays(7) || newRes.ScheduledTime <= DateTime.UtcNow)
                 return BadRequest("Reservations must be scheduled in the future and within 7 days.");
                 
@@ -47,6 +69,9 @@ namespace SmartSolar.Backend.Controllers
             return CreatedAtAction(nameof(Get), new { id = newRes.Id }, newRes);
         }
 
+        /// <summary>
+        /// Modifies an existing energy reservation. Enforces the 12-hour advance notice rule.
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, Reservation updatedRes)
         {
@@ -54,7 +79,7 @@ namespace SmartSolar.Backend.Controllers
             if (res is null)
                 return NotFound();
 
-            // Updates require at least 12 hours notice
+            // Business Rule: Updates require at least 12 hours notice prior to scheduled time
             if ((res.ScheduledTime - DateTime.UtcNow).TotalHours < 12)
                 return BadRequest("Updates require at least 12 hours notice.");
 
@@ -63,7 +88,9 @@ namespace SmartSolar.Backend.Controllers
             return NoContent();
         }
         
-        //UT
+        /// <summary>
+        /// Approves a pending reservation and generates a cryptographically secure QR token for physical check-in.
+        /// </summary>
         [HttpPut("approve/{id}")]
         public async Task<IActionResult> Approve(string id)
         {
@@ -78,7 +105,7 @@ namespace SmartSolar.Backend.Controllers
 
             res.Status = "Approved";
 
-            // Generate a random, server-side QR token.
+            // Generate a secure, 32-byte cryptographic QR token
             res.QrCodeData =
                 Convert.ToHexString(
                     System.Security.Cryptography.RandomNumberGenerator
@@ -89,7 +116,9 @@ namespace SmartSolar.Backend.Controllers
             return Ok(res);
         }
 
-        
+        /// <summary>
+        /// Marks an approved reservation as completed after successful QR verification at the physical station.
+        /// </summary>
         [HttpPut("complete/{id}")]
         public async Task<IActionResult> Complete(string id)
         {
@@ -109,7 +138,9 @@ namespace SmartSolar.Backend.Controllers
             return Ok(res);
         }
 
-
+        /// <summary>
+        /// Cancels an energy reservation. Enforces the 12-hour advance cancellation rule.
+        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
@@ -117,7 +148,7 @@ namespace SmartSolar.Backend.Controllers
             if (res is null)
                 return NotFound();
 
-            // Cancellations require at least 12 hours notice
+            // Business Rule: Cancellations require at least 12 hours notice prior to scheduled time
             if ((res.ScheduledTime - DateTime.UtcNow).TotalHours < 12)
                 return BadRequest("Cancellations require at least 12 hours notice.");
 

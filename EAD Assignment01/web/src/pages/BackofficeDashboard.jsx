@@ -1,3 +1,11 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: BackofficeDashboard
+ * Description: Administration portal for User Management (NIC PK, deactivation/reactivation),
+ *              Microgrid Node Management (GPS, Capacity, Battery Slots), and Energy Slot Scheduling.
+ */
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
