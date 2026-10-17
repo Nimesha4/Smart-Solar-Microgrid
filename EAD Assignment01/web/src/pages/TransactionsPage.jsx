@@ -20,7 +20,6 @@ import Swal from "sweetalert2";
 import HeaderMenu from "../components/HeaderMenu";
 import "../App.css";
 import { apiUrl } from '../config';
-const API_BASE_URL = apiUrl;
 
 const getReservationId = (reservation) =>
   String(reservation?.id ?? reservation?._id ?? reservation?.reservationId ?? "");
@@ -92,7 +91,7 @@ export default function TransactionsPage() {
 
     // Load bookings independently from transaction history.
     try {
-      const response = await fetch(`${API_BASE_URL}/reservations`);
+      const response = await fetch(apiUrl('/api/Reservations'));
 
       if (!response.ok) {
         throw new Error(`Unable to load bookings (HTTP ${response.status}).`);
@@ -127,7 +126,7 @@ export default function TransactionsPage() {
 
     // Load transactions independently.
     try {
-      const response = await fetch(`${API_BASE_URL}/transactions`);
+      const response = await fetch(apiUrl('/api/Transactions'));
 
       if (!response.ok) {
         throw new Error(
@@ -223,7 +222,7 @@ export default function TransactionsPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/transactions`, {
+      const response = await fetch(apiUrl('/api/Transactions'), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -306,12 +305,11 @@ export default function TransactionsPage() {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/transactions/${encodeURIComponent(id)}`,
-        {
-          method: "DELETE",
-        }
-      );
-
+  apiUrl(`/api/Transactions/${encodeURIComponent(id)}`),
+  {
+    method: "DELETE",
+  }
+);
       if (!response.ok) {
         const responseText = await response.text();
         let errorMessage = responseText;
