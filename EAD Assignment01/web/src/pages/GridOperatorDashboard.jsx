@@ -294,7 +294,16 @@ export default function GridOperatorDashboard() {
     if (filter === 'All') return true;
     return r.status === filter;
   });
+// Add this inside GridOperatorDashboard, before return (...)
+  const hubName = (reservation) => {
+    const nodeId = reservation?.microgridNodeId;
 
+    const node = nodes.find(
+      (n) => String(n.id) === String(nodeId)
+    );
+
+    return node?.name || reservation?.nodeName || "Unknown Microgrid";
+  };
   return (
     <div className="go-root">
       <style>{`
@@ -828,11 +837,13 @@ export default function GridOperatorDashboard() {
 
             {reservations.length === 0 ? (
               loaded && <div className="go-empty">No active power trading bookings found.</div>
-            ) : visible.length === 0 ? (
-              <div className="go-empty">No {filter.toLowerCase()} bookings.</div>
-            ) : (
-              <div className="go-queue">
-                {visible.map(r => {
+            ) : visibleReservations.length === 0 ? (
+          <div className="go-empty">
+            No {filter.toLowerCase()} bookings.
+          </div>
+        ) : (
+          <div className="go-queue">
+            {visibleReservations.map(r => {
                   const d = new Date(r.scheduledTime);
                   const name = hubName(r);
                   return (
