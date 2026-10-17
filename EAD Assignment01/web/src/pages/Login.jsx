@@ -11,7 +11,8 @@ import axios from 'axios';
 import {
   Sun, IdCard, Lock, ArrowRight, AlertCircle, Eye, EyeOff, Wrench, ShieldCheck,
 } from 'lucide-react';
-import { apiUrl } from '../config';
+import { apiUrl, setAuthToken } from '../config';
+import { setAuthSession } from '../auth';
 
 /* ------------------------------------------------------------------ */
 /*  Photos: your own copy -> Pexels -> drawn solar artwork.           */
@@ -122,15 +123,17 @@ export default function Login() {
           password: password
         }
       );
-       const user = response.data;
+      const data = response.data;
+      const user = { nic: data.nic, name: data.name, email: data.email, role: data.role, isActive: data.isActive };
 
-      
       if (!user.isActive) {
         setError("Account is deactivated. Contact Backoffice.");
         return;
       }
 
-      localStorage.setItem('user', JSON.stringify(user));
+      // Store token and user session
+      setAuthToken(data.token);
+      setAuthSession(user, data.token);
 
       if (user.role === 'Backoffice') {
         navigate('/backoffice');

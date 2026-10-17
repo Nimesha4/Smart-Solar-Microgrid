@@ -16,6 +16,7 @@ import EditNodeModal from '../components/EditNodeModal';
 import EditEnergySlotModal from '../components/EditEnergySlotModal';
 import MicrogridGoogleMap from '../components/MicrogridGoogleMap';
 import { apiUrl } from '../config';
+import { clearAuthSession } from '../auth';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -329,7 +330,7 @@ export default function BackofficeDashboard() {
   };
 
   const logout = () => {
-    localStorage.clear();
+    clearAuthSession();
     navigate('/login');
   };
 

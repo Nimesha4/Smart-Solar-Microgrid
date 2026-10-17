@@ -6,13 +6,17 @@
 //              role verification, and profile management with NIC primary key.
 // ============================================================================
 
+using Microsoft.AspNetCore.Authorization;
+using System;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartSolar.Backend.Models;
 using SmartSolar.Backend.Services;
+using SmartSolar.Backend.Validators;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using SmartSolar.Backend.Validators;
+
 namespace SmartSolar.Backend.Controllers
 {
     [ApiController]
@@ -20,17 +24,20 @@ namespace SmartSolar.Backend.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UserService _userService;
+        private readonly JwtTokenService _jwtTokenService;
 
         // Constructor: Injects the central UserService instance
-        public UsersController(UserService userService)
+        public UsersController(UserService userService, JwtTokenService jwtTokenService)
         {
             _userService = userService;
+            _jwtTokenService = jwtTokenService;
         }
 
         /// <summary>
         /// Retrieves all registered user accounts from MongoDB.
         /// </summary>
         [HttpGet]
+        [Authorize(Policy = "BackofficeOnly")]
         public async Task<List<User>> Get() =>
             await _userService.GetAsync();
 
@@ -38,8 +45,15 @@ namespace SmartSolar.Backend.Controllers
         /// Retrieves a single user profile using their NIC as primary key.
         /// </summary>
         [HttpGet("{nic}")]
+        [Authorize]
         public async Task<ActionResult<User>> Get(string nic)
         {
+            var currentUser = User.Claims.FirstOrDefault(c => c.Type == "nic")?.Value ?? User.Identity?.Name;
+            if (!string.Equals(currentUser, nic, StringComparison.OrdinalIgnoreCase) && !User.IsInRole("Backoffice"))
+            {
+                return Forbid();
+            }
+
             var user = await _userService.GetAsync(nic);
 
             if (user is null)
@@ -52,6 +66,7 @@ namespace SmartSolar.Backend.Controllers
         /// Registers a new user. Enforces Prosumer role on public signup and checks NIC uniqueness.
         /// </summary>
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Post([FromBody] UserRegisterDto newUser)
         {
             if (newUser == null ||
@@ -83,8 +98,6 @@ namespace SmartSolar.Backend.Controllers
                     message = "User with this NIC already exists."
                 });
             }
-            if (existing is not null)
-                return Conflict(new { message = "User with this NIC already exists." });
 
             // Public registration enforces Prosumer role on the server
             var user = new User
@@ -116,6 +129,7 @@ namespace SmartSolar.Backend.Controllers
         /// Authenticates user credentials against PBKDF2 hashed password and ensures account is active.
         /// </summary>
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] UserLoginDto login)
         {
             if (login == null ||
@@ -158,9 +172,12 @@ namespace SmartSolar.Backend.Controllers
                 });
             }
 
+            var token = _jwtTokenService.GenerateToken(user);
+
             return Ok(new
             {
                 message = "Login successful",
+                token,
                 nic = user.Nic,
                 name = user.Name,
                 email = user.Email,
@@ -173,8 +190,15 @@ namespace SmartSolar.Backend.Controllers
         /// Updates profile information for an existing user while preserving security credentials.
         /// </summary>
         [HttpPut("{nic}")]
+        [Authorize]
         public async Task<IActionResult> Put(string nic, User updatedUser)
         {
+            var currentUser = User.Claims.FirstOrDefault(c => c.Type == "nic")?.Value ?? User.Identity?.Name;
+            if (!string.Equals(currentUser, nic, StringComparison.OrdinalIgnoreCase) && !User.IsInRole("Backoffice"))
+            {
+                return Forbid();
+            }
+
             if (!NicValidator.IsValid(nic))
             {
                 return BadRequest(new
@@ -209,6 +233,7 @@ namespace SmartSolar.Backend.Controllers
         /// Deactivates a user account, preventing further logins until reactivated by Backoffice.
         /// </summary>
         [HttpPut("deactivate/{nic}")]
+        [Authorize(Policy = "BackofficeOnly")]
         public async Task<IActionResult> Deactivate(string nic)
         {
             var user = await _userService.GetAsync(nic);
@@ -223,6 +248,7 @@ namespace SmartSolar.Backend.Controllers
         /// Reactivates a deactivated user account (Backoffice authorization).
         /// </summary>
         [HttpPut("activate/{nic}")]
+        [Authorize(Policy = "BackofficeOnly")]
         public async Task<IActionResult> Activate(string nic)
         {
             var user = await _userService.GetAsync(nic);
@@ -237,6 +263,7 @@ namespace SmartSolar.Backend.Controllers
         /// Permanently deletes a user profile from the system.
         /// </summary>
         [HttpDelete("{nic}")]
+        [Authorize(Policy = "BackofficeOnly")]
         public async Task<IActionResult> Delete(string nic)
         {
             var user = await _userService.GetAsync(nic);

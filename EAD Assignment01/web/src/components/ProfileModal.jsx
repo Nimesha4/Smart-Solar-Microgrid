@@ -10,6 +10,7 @@ import axios from 'axios';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { apiUrl } from '../config';
+import { clearAuthSession } from '../auth';
 
 /**
  * ProfileModal renders prosumer and operator profile details with edit and password update capabilities.
@@ -67,7 +68,7 @@ export default function ProfileModal({ user, onClose }) {
     if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) return;
     try {
       await axios.delete(apiUrl(`/api/users/${user.nic}`));
-      localStorage.clear();
+      clearAuthSession();
       navigate('/login');
     } catch (e) {
       setError('Failed to delete account.');

@@ -1,4 +1,3 @@
-
 // ============================================================================
 // Course: SE4040 - Enterprise Application Development
 // Assignment: Assignment 1 - Smart Solar Microgrid Trading System
@@ -7,6 +6,7 @@
 //              performing QR verification against MongoDB reservation records.
 // ============================================================================
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using SmartSolar.Backend.Models;
@@ -19,6 +19,7 @@ namespace SmartSolar.Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TransactionsController : ControllerBase
     {
         private readonly TransactionService _transactionService;
@@ -37,6 +38,7 @@ namespace SmartSolar.Backend.Controllers
         /// Retrieves all finalized energy transfer transactions from MongoDB.
         /// </summary>
         [HttpGet]
+        [Authorize(Policy = "BackofficeOrGridOperator")]
         public async Task<ActionResult<List<Transaction>>> Get()
         {
             var transactions = await _transactionService.GetAsync();
@@ -47,6 +49,7 @@ namespace SmartSolar.Backend.Controllers
         /// Validates scanned QR token against reservation data and records the finalized energy transfer transaction.
         /// </summary>
         [HttpPost]
+        [Authorize(Policy = "GridOperatorOnly")]
         public async Task<IActionResult> Create(
             [FromBody] CreateTransactionRequest request)
         {
@@ -116,6 +119,7 @@ namespace SmartSolar.Backend.Controllers
         /// Permanently removes a transaction record by its ObjectId.
         /// </summary>
         [HttpDelete("{id}")]
+        [Authorize(Policy = "BackofficeOnly")]
         public async Task<IActionResult> Delete(string id)
         {
             if (!ObjectId.TryParse(id, out _))

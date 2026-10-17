@@ -7,7 +7,9 @@
 //              notice for updates/cancellations, and secure QR dispatch).
 // ============================================================================
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using SmartSolar.Backend.Models;
 using SmartSolar.Backend.Services;
 using System;
@@ -18,6 +20,7 @@ namespace SmartSolar.Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ReservationsController : ControllerBase
     {
         private readonly ReservationService _reservationService;
@@ -32,6 +35,7 @@ namespace SmartSolar.Backend.Controllers
         /// Retrieves all energy trading reservations across the microgrid network.
         /// </summary>
         [HttpGet]
+        [Authorize(Policy = "BackofficeOrGridOperator")]
         public async Task<List<Reservation>> Get() =>
             await _reservationService.GetAsync();
 
@@ -39,11 +43,20 @@ namespace SmartSolar.Backend.Controllers
         /// Retrieves a specific reservation by its unique identifier.
         /// </summary>
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<Reservation>> Get(string id)
         {
             var res = await _reservationService.GetAsync(id);
             if (res is null)
                 return NotFound();
+
+            var currentUserNic = User.Claims.FirstOrDefault(c => c.Type == "nic")?.Value;
+            var isAdmin = User.IsInRole("Backoffice") || User.IsInRole("GridOperator");
+            if (!isAdmin && !string.Equals(currentUserNic, res.ProsumerNic, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             return res;
         }
         
@@ -51,13 +64,24 @@ namespace SmartSolar.Backend.Controllers
         /// Retrieves all energy reservations associated with a specific Prosumer NIC.
         /// </summary>
         [HttpGet("prosumer/{nic}")]
-        public async Task<List<Reservation>> GetByProsumer(string nic) =>
-            await _reservationService.GetByProsumerAsync(nic);
+        [Authorize]
+        public async Task<List<Reservation>> GetByProsumer(string nic)
+        {
+            var currentUserNic = User.Claims.FirstOrDefault(c => c.Type == "nic")?.Value;
+            var isAdmin = User.IsInRole("Backoffice") || User.IsInRole("GridOperator");
+            if (!isAdmin && !string.Equals(currentUserNic, nic, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            return await _reservationService.GetByProsumerAsync(nic);
+        }
 
         /// <summary>
         /// Creates a new energy drop-off booking. Enforces the 7-day future booking window rule.
         /// </summary>
         [HttpPost]
+        [Authorize(Policy = "ProsumerOnly")]
         public async Task<IActionResult> Post(Reservation newRes)
         {
             // Business Rule: Must be scheduled in the future and within 7 days
@@ -73,11 +97,19 @@ namespace SmartSolar.Backend.Controllers
         /// Modifies an existing energy reservation. Enforces the 12-hour advance notice rule.
         /// </summary>
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> Put(string id, Reservation updatedRes)
         {
             var res = await _reservationService.GetAsync(id);
             if (res is null)
                 return NotFound();
+
+            var currentUserNic = User.Claims.FirstOrDefault(c => c.Type == "nic")?.Value;
+            var isAdmin = User.IsInRole("Backoffice") || User.IsInRole("GridOperator");
+            if (!isAdmin && !string.Equals(currentUserNic, res.ProsumerNic, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
 
             // Business Rule: Updates require at least 12 hours notice prior to scheduled time
             if ((res.ScheduledTime - DateTime.UtcNow).TotalHours < 12)
@@ -92,6 +124,7 @@ namespace SmartSolar.Backend.Controllers
         /// Approves a pending reservation and generates a cryptographically secure QR token for physical check-in.
         /// </summary>
         [HttpPut("approve/{id}")]
+        [Authorize(Policy = "GridOperatorOnly")]
         public async Task<IActionResult> Approve(string id)
         {
             var res = await _reservationService.GetAsync(id);
@@ -120,6 +153,7 @@ namespace SmartSolar.Backend.Controllers
         /// Marks an approved reservation as completed after successful QR verification at the physical station.
         /// </summary>
         [HttpPut("complete/{id}")]
+        [Authorize(Policy = "GridOperatorOnly")]
         public async Task<IActionResult> Complete(string id)
         {
             var res = await _reservationService.GetAsync(id);
@@ -142,11 +176,19 @@ namespace SmartSolar.Backend.Controllers
         /// Cancels an energy reservation. Enforces the 12-hour advance cancellation rule.
         /// </summary>
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> Delete(string id)
         {
             var res = await _reservationService.GetAsync(id);
             if (res is null)
                 return NotFound();
+
+            var currentUserNic = User.Claims.FirstOrDefault(c => c.Type == "nic")?.Value;
+            var isAdmin = User.IsInRole("Backoffice") || User.IsInRole("GridOperator");
+            if (!isAdmin && !string.Equals(currentUserNic, res.ProsumerNic, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
 
             // Business Rule: Cancellations require at least 12 hours notice prior to scheduled time
             if ((res.ScheduledTime - DateTime.UtcNow).TotalHours < 12)
