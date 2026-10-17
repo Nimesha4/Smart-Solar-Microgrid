@@ -242,7 +242,10 @@ export default function GridOperatorDashboard() {
   };
 
   const pendingCount = reservations.filter(r => r.status === 'Pending').length;
-
+// Check whether reservations contain a grid node reference.
+  const hasNodeRef = reservations.some(
+    r => r.microgridNodeId != null && String(r.microgridNodeId).trim() !== ''
+  );
   const statusClass = (s) => s === 'Approved' ? 'go-on' : s === 'Pending' ? 'go-pending' : 'go-closed';
   const statusGroup = (s) => (s === 'Approved' || s === 'Pending' ? s : 'Other');
   const fmt = (v) => Number(v.toFixed(1)).toLocaleString();
