@@ -78,7 +78,7 @@ namespace SmartSolar.Backend.Controllers
 
             res.Status = "Approved";
 
-            // Generate a random, server-side QR token.
+            
             res.QrCodeData =
                 Convert.ToHexString(
                     System.Security.Cryptography.RandomNumberGenerator

@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import HeaderMenu from "../components/HeaderMenu";
 import "../App.css";
 
@@ -151,9 +152,25 @@ export default function TransactionsPage() {
     loadData();
   }, [loadData]);
 
+  // Automatically populate the QR token from the selected approved booking.
+  // The GET /api/reservations response must include qrCodeData / QrCodeData.
   const handleBookingChange = (event) => {
-    setReservationId(event.target.value);
-    setQrCodeData("");
+    const selectedId = event.target.value;
+    setReservationId(selectedId);
+
+    const booking = reservations.find(
+      (reservation) => getReservationId(reservation) === selectedId
+    );
+
+    const token =
+      booking?.qrCodeData ??
+      booking?.QrCodeData ??
+      booking?.qr_code_data ??
+      booking?.qrToken ??
+      booking?.QrToken ??
+      "";
+
+    setQrCodeData(typeof token === "string" ? token : String(token ?? ""));
     setMessage("");
     setError("");
   };
@@ -164,17 +181,35 @@ export default function TransactionsPage() {
     setMessage("");
 
     if (!reservationId) {
-      setError("Please select an approved booking.");
+      await Swal.fire({
+        icon: "warning",
+        title: "Select a booking",
+        text: "Please select an approved booking before continuing.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#16a34a",
+      });
       return;
     }
 
     if (!qrCodeData.trim()) {
-      setError("Please enter the booking's QR verification token.");
+      await Swal.fire({
+        icon: "warning",
+        title: "QR token required",
+        text: "Please enter the booking's QR verification token.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#16a34a",
+      });
       return;
     }
 
     if (isAlreadyRecorded(reservationId)) {
-      setError("A transaction has already been recorded for this booking.");
+      await Swal.fire({
+        icon: "info",
+        title: "Already recorded",
+        text: "A transaction has already been recorded for this booking.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#16a34a",
+      });
       return;
     }
 
@@ -203,32 +238,59 @@ export default function TransactionsPage() {
         );
       }
 
-      setMessage("Transaction recorded successfully.");
       setReservationId("");
       setQrCodeData("");
-
       await loadData();
+
+      await Swal.fire({
+        icon: "success",
+        title: "Transaction recorded!",
+        text: "The energy transaction has been saved successfully.",
+        confirmButtonText: "Great",
+        confirmButtonColor: "#16a34a",
+      });
     } catch (err) {
-      setError(err.message || "Failed to create the transaction.");
+      await Swal.fire({
+        icon: "error",
+        title: "Could not record transaction",
+        text: err.message || "Failed to create the transaction.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#dc2626",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // Delete a transaction from the backend after confirmation.
+  // Delete a transaction from the backend after SweetAlert confirmation.
   const deleteTransaction = async (transaction) => {
     const id = getTransactionId(transaction);
 
     if (!id) {
-      setError("Cannot delete this transaction because its ID is missing.");
+      await Swal.fire({
+        icon: "error",
+        title: "Missing transaction ID",
+        text: "This transaction cannot be deleted because its ID is missing.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#dc2626",
+      });
       return;
     }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this transaction? This action cannot be undone."
-    );
+    const confirmation = await Swal.fire({
+      title: "Delete transaction?",
+      text: "This transaction record will be permanently deleted. This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+      focusCancel: true,
+    });
 
-    if (!confirmed) return;
+    if (!confirmation.isConfirmed) return;
 
     setDeletingId(id);
     setError("");
@@ -245,7 +307,6 @@ export default function TransactionsPage() {
 
       if (!response.ok) {
         const responseText = await response.text();
-
         let errorMessage = responseText;
 
         try {
@@ -264,14 +325,28 @@ export default function TransactionsPage() {
         );
       }
 
-      // Remove it from the UI only after the server confirms success.
+      // Update the table only after the backend confirms deletion.
       setTransactions((current) =>
         current.filter((item) => getTransactionId(item) !== id)
       );
 
-      setMessage("Transaction deleted successfully.");
+      await Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "The transaction has been deleted successfully.",
+        confirmButtonText: "Done",
+        confirmButtonColor: "#16a34a",
+        timer: 2200,
+        timerProgressBar: true,
+      });
     } catch (err) {
-      setError(err.message || "Unable to delete the transaction.");
+      await Swal.fire({
+        icon: "error",
+        title: "Delete failed",
+        text: err.message || "Unable to delete the transaction.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#dc2626",
+      });
     } finally {
       setDeletingId("");
     }
@@ -537,7 +612,7 @@ export default function TransactionsPage() {
                   <div>
                     <h2>Verify QR Token</h2>
                     <p>
-                      Enter the token encoded in the booking's QR code.
+                      The token is populated automatically from the selected booking.
                     </p>
                   </div>
                 </div>
@@ -549,17 +624,17 @@ export default function TransactionsPage() {
                 <input
                   id="qrToken"
                   className="transaction-input"
-                  type="password"
+                  type="text"
                   value={qrCodeData}
-                  onChange={(event) => setQrCodeData(event.target.value)}
-                  placeholder="Enter the QR verification token"
+                  readOnly
+                  placeholder="Select an approved booking to load its token"
                   autoComplete="off"
                   required
                 />
 
                 <small className="transaction-help-text">
-                  The backend must validate this token against the selected
-                  booking.
+                  This value is loaded from the selected booking. The backend
+                  must still validate it against that booking before recording.
                 </small>
               </div>
 
