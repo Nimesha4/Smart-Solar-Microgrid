@@ -4,7 +4,7 @@
 // File: ReservationsController.cs
 // Description: REST Controller managing Energy Slot Reservations, enforcing
 //              core business logic (7-day advance booking window, 12-hour
-//              notice for updates/cancellations, and secure QR dispatch).
+//              notice  for updates/cancellations, and secure QR dispatch).
 // ============================================================================
 
 using Microsoft.AspNetCore.Mvc;
