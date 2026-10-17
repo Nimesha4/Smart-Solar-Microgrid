@@ -55,7 +55,7 @@ namespace SmartSolar.Backend.Controllers
             await _reservationService.GetByProsumerAsync(nic);
 
         /// <summary>
-        /// Creates a new energy drop-off booking. Enforces the 7-day future booking window rule.
+        /// Creates a new  energy drop-off booking. Enforces the 7-day future booking window rule.
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> Post(Reservation newRes)
