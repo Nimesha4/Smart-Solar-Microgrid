@@ -1,8 +1,19 @@
 
+// ============================================================================
+// Course: SE4040 - Enterprise Application Development
+// Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+// File: TransactionsController.cs
+// Description: REST Controller handling finalized power trading transactions,
+//              performing QR verification against MongoDB reservation records.
+// ============================================================================
+
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using SmartSolar.Backend.Models;
 using SmartSolar.Backend.Services;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SmartSolar.Backend.Controllers
 {
@@ -13,6 +24,7 @@ namespace SmartSolar.Backend.Controllers
         private readonly TransactionService _transactionService;
         private readonly ReservationService _reservationService;
 
+        // Constructor: Injects transaction service and reservation service for cross-verification
         public TransactionsController(
             TransactionService transactionService,
             ReservationService reservationService)
@@ -21,7 +33,9 @@ namespace SmartSolar.Backend.Controllers
             _reservationService = reservationService;
         }
 
-        // GET: api/Transactions
+        /// <summary>
+        /// Retrieves all finalized energy transfer transactions from MongoDB.
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<List<Transaction>>> Get()
         {
@@ -29,7 +43,9 @@ namespace SmartSolar.Backend.Controllers
             return Ok(transactions);
         }
 
-        // POST: api/Transactions
+        /// <summary>
+        /// Validates scanned QR token against reservation data and records the finalized energy transfer transaction.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> Create(
             [FromBody] CreateTransactionRequest request)
@@ -96,7 +112,9 @@ namespace SmartSolar.Backend.Controllers
                 transaction);
         }
 
-        // DELETE: api/Transactions/{id}
+        /// <summary>
+        /// Permanently removes a transaction record by its ObjectId.
+        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

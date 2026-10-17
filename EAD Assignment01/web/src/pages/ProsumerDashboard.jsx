@@ -1,3 +1,11 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: ProsumerDashboard
+ * Description: Prosumer dashboard for reserving energy drop-off/charging slots, managing bookings (7-day rule, 12-hour rule),
+ *              retrieving cryptographic QR tokens, and locating microgrid hubs via Google Maps.
+ */
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
@@ -8,6 +16,8 @@ import {
 import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
 import EditReservationModal from '../components/EditReservationModal';
+import MicrogridGoogleMap from '../components/MicrogridGoogleMap';
+import { apiUrl } from '../config';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -17,8 +27,8 @@ const px = (id, w = 1400) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
 
 const PHOTO = {
-  heroField: 18316987,   // rows of solar panels
-  heroRoof: 12243093,    // house with rooftop solar
+  heroField: 18316987,
+  heroRoof: 12243093,
 };
 const HUB_PHOTOS = [15751124, 12243093, 356049, 9729882];
 
@@ -126,7 +136,6 @@ function StatusDonut({ segments, total }) {
   );
 }
 
-/* A typical sunny-day output curve. The amber marker follows the time chosen in the form. */
 function SunCurve({ hour }) {
   const sun = h => (h < 5.5 || h > 19.5 ? 0 : Math.exp(-Math.pow(h - 12.5, 2) / (2 * 2.7 * 2.7)));
   const xOf = h => 12 + ((h - 5) / 15) * 296;
@@ -171,8 +180,6 @@ function SunCurve({ hour }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-
 export default function ProsumerDashboard() {
   const [nodes, setNodes] = useState([]);
   const [reservations, setReservations] = useState([]);
@@ -185,6 +192,7 @@ export default function ProsumerDashboard() {
   const [loaded, setLoaded] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [editingReservation, setEditingReservation] = useState(null);
+  const [showMap, setShowMap] = useState(false);
 
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
@@ -208,11 +216,10 @@ export default function ProsumerDashboard() {
 
   const fetchData = async () => {
     try {
-      const nodesRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/nodes');
-      // Only show active nodes
+      const nodesRes = await axios.get(apiUrl('/api/nodes'));
       setNodes(nodesRes.data.filter(n => n.isActive));
 
-      const resRes = await axios.get(`https://smart-solar-microgrid.onrender.com/api/reservations/prosumer/${user.nic}`);
+      const resRes = await axios.get(apiUrl(`/api/reservations/prosumer/${user.nic}`));
       setReservations(getMergedReservations(resRes.data));
     } catch (e) {
       console.error(e);
@@ -227,10 +234,8 @@ export default function ProsumerDashboard() {
   };
 
   const handleUpdateReservation = async (updatedRes) => {
-    // 1. Immediately update React state for real-time UI/chart recalculation
     setReservations(prev => prev.map(r => (r.id === updatedRes.id ? updatedRes : r)));
 
-    // 2. Persist in localStorage so page reload preserves edits
     try {
       const saved = JSON.parse(localStorage.getItem('custom_reservations_edits') || '{}');
       saved[updatedRes.id] = updatedRes;
@@ -239,9 +244,8 @@ export default function ProsumerDashboard() {
       console.error("Failed to save reservation edits locally", err);
     }
 
-    // 3. Attempt backend sync (non-blocking)
     try {
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/reservations/${updatedRes.id}`, updatedRes);
+      await axios.put(apiUrl(`/api/reservations/${updatedRes.id}`), updatedRes);
     } catch (err) {
       console.log("Backend reservation sync notice, updated locally on frontend.", err);
     }
@@ -259,14 +263,14 @@ export default function ProsumerDashboard() {
         energyAmountKwh: parseFloat(energyAmount)
       };
 
-      await axios.post('https://smart-solar-microgrid.onrender.com/api/reservations', newBooking);
+      await axios.post(apiUrl('/api/reservations'), newBooking);
       alert("Booking created successfully!");
       setEnergyAmount('');
       setScheduledDate('');
       fetchData();
     } catch (e) {
       if (e.response && e.response.data) {
-        alert(e.response.data); // Shows the 7-day rule error from backend
+        alert(e.response.data);
       } else {
         alert("Failed to create booking.");
       }
@@ -274,7 +278,6 @@ export default function ProsumerDashboard() {
   };
 
   const handleCancelBooking = async (id) => {
-    // 1. Update frontend state
     const updated = reservations.map(r => (r.id === id ? { ...r, status: 'Cancelled' } : r));
     setReservations(updated);
 
@@ -288,7 +291,7 @@ export default function ProsumerDashboard() {
     } catch {}
 
     try {
-      await axios.delete(`https://smart-solar-microgrid.onrender.com/api/reservations/${id}`);
+      await axios.delete(apiUrl(`/api/reservations/${id}`));
     } catch (e) {
       console.log("Backend cancel notice, updated on frontend.");
     }
@@ -775,10 +778,25 @@ export default function ProsumerDashboard() {
             <div className="pr-split">
               {/* Left: hub picker + how it works */}
               <div>
-                <div className="pr-sec-head">
-                  <h3 className="pr-display">Choose a hub</h3>
-                  <span>{nodes.length} available</span>
+                <div className="pr-sec-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h3 className="pr-display">Choose a hub</h3>
+                    <span>{nodes.length} available</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowMap(!showMap)}
+                    className="pr-chip"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <MapPin size={12} />
+                    {showMap ? 'Hide Map' : 'View on Google Map'}
+                  </button>
                 </div>
+
+                {showMap && (
+                  <MicrogridGoogleMap nodes={nodes} initialSelectedId={selectedNode} />
+                )}
 
                 <div className="pr-hubs">
                   {loaded && nodes.length === 0 && (

@@ -1,4 +1,11 @@
 
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: TransactionsPage
+ * Description: Energy transfer transactions ledger and audit report page for Grid Operators and Backoffice.
+ */
+
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Sun,
@@ -12,8 +19,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import HeaderMenu from "../components/HeaderMenu";
 import "../App.css";
-
-const API_BASE_URL = "https://smart-solar-microgrid.onrender.com/api";
+import { apiUrl } from '../config';
+const API_BASE_URL = apiUrl;
 
 const getReservationId = (reservation) =>
   String(reservation?.id ?? reservation?._id ?? reservation?.reservationId ?? "");

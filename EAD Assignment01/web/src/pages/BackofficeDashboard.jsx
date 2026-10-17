@@ -1,10 +1,21 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: BackofficeDashboard
+ * Description: Administration portal for User Management (NIC PK, deactivation/reactivation),
+ *              Microgrid Node Management (GPS, Capacity, Battery Slots), and Energy Slot Scheduling.
+ */
+
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { Sun, Users, Search, Plus, Power, Clock, MapPin, BatteryCharging, Zap, X, Edit2, Check } from 'lucide-react';
+import { Sun, Users, Search, Plus, Power, Clock, MapPin, BatteryCharging, Zap, X, Edit2, Check, Calendar, Trash2, ExternalLink } from 'lucide-react';
 import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
 import EditNodeModal from '../components/EditNodeModal';
+import EditEnergySlotModal from '../components/EditEnergySlotModal';
+import MicrogridGoogleMap from '../components/MicrogridGoogleMap';
+import { apiUrl } from '../config';
 
 /* ------------------------------------------------------------------ */
 /*  Real photography (Pexels, free to use). Swap the IDs to change    */
@@ -64,15 +75,34 @@ export default function BackofficeDashboard() {
   const [users, setUsers] = useState([]);
   const [nodes, setNodes] = useState([]);
 
-  // Form States for Node Creation
+  // Form States for Node Creation (Capacity, Battery Slots & GPS)
   const [nodeName, setNodeName] = useState('');
   const [capacity, setCapacity] = useState('');
   const [batterySlots, setBatterySlots] = useState('');
+  const [nodeLat, setNodeLat] = useState('6.9271');
+  const [nodeLng, setNodeLng] = useState('79.8612');
+  const [nodeSchedule, setNodeSchedule] = useState('08:00-18:00');
+
+  // Energy Slots States
+  const [energySlots, setEnergySlots] = useState([]);
+  const [editingSlot, setEditingSlot] = useState(null);
+  const [slotFilterHub, setSlotFilterHub] = useState('All');
+  const [slotFilterStatus, setSlotFilterStatus] = useState('All');
+
+  // Energy Slot Form States
+  const [newSlotHubId, setNewSlotHubId] = useState('');
+  const [newSlotDate, setNewSlotDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newSlotStart, setNewSlotStart] = useState('08:00');
+  const [newSlotEnd, setNewSlotEnd] = useState('10:00');
+  const [newSlotCap, setNewSlotCap] = useState('25');
+  const [newSlotSlots, setNewSlotSlots] = useState('4');
+  const [newSlotRate, setNewSlotRate] = useState('0.35');
 
   const [activeTab, setActiveTab] = useState('users');
   const [search, setSearch] = useState('');
   const [userFilter, setUserFilter] = useState('All');
   const [hubFilter, setHubFilter] = useState('All');
+  const [showHubMap, setShowHubMap] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [editingNode, setEditingNode] = useState(null);
@@ -87,6 +117,50 @@ export default function BackofficeDashboard() {
     fetchData();
   }, [navigate]);
 
+  const generateDefaultSlots = (hubList) => {
+    const today = new Date().toISOString().split('T')[0];
+    const timeWindows = [
+      { start: '08:00', end: '10:00', status: 'Available' },
+      { start: '10:00', end: '12:00', status: 'Booked' },
+      { start: '12:00', end: '14:00', status: 'Available' },
+      { start: '14:00', end: '16:00', status: 'Available' },
+      { start: '16:00', end: '18:00', status: 'Available' }
+    ];
+    const generated = [];
+    hubList.forEach((hub, hIdx) => {
+      timeWindows.forEach((tw, tIdx) => {
+        generated.push({
+          id: `SLOT-${hub.id ? String(hub.id).slice(-4) : hIdx + 1}-${tIdx + 1}`,
+          hubId: hub.id,
+          hubName: hub.name,
+          date: today,
+          startTime: tw.start,
+          endTime: tw.end,
+          capacityKwh: Math.max(10, Math.round((Number(hub.capacityKwh) || 50) / 4)),
+          batterySlots: Math.max(2, Math.round((Number(hub.availableBatterySlots) || 8) / 2)),
+          status: tw.status,
+          ratePerKwh: 0.35
+        });
+      });
+    });
+    return generated;
+  };
+
+  const loadEnergySlots = (currentNodes) => {
+    try {
+      const saved = localStorage.getItem('custom_energy_slots');
+      if (saved) {
+        setEnergySlots(JSON.parse(saved));
+        return;
+      }
+    } catch (e) {}
+    if (currentNodes && currentNodes.length > 0) {
+      const defaults = generateDefaultSlots(currentNodes);
+      setEnergySlots(defaults);
+      localStorage.setItem('custom_energy_slots', JSON.stringify(defaults));
+    }
+  };
+
   const getMergedNodes = (rawNodes) => {
     try {
       const saved = JSON.parse(localStorage.getItem('custom_nodes_edits') || '{}');
@@ -98,27 +172,70 @@ export default function BackofficeDashboard() {
 
   const fetchData = async () => {
     try {
-      const usersRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/users');
+      const usersRes = await axios.get(apiUrl('/api/users'));
       setUsers(usersRes.data);
-      const nodesRes = await axios.get('https://smart-solar-microgrid.onrender.com/api/nodes');
-      setNodes(getMergedNodes(nodesRes.data));
+      const nodesRes = await axios.get(apiUrl('/api/nodes'));
+      const mergedNodes = getMergedNodes(nodesRes.data);
+      setNodes(mergedNodes);
+      loadEnergySlots(mergedNodes);
     } catch (e) {
       console.error("Fetch error", e);
       try {
         const saved = JSON.parse(localStorage.getItem('custom_nodes_edits') || '{}');
         const list = Object.values(saved);
-        if (list.length > 0) setNodes(list);
+        if (list.length > 0) {
+          setNodes(list);
+          loadEnergySlots(list);
+        }
       } catch {}
     } finally {
       setLoaded(true);
     }
   };
 
+  const handleCreateEnergySlot = (e) => {
+    e.preventDefault();
+    if (!newSlotHubId) {
+      alert("Please choose a Microgrid Hub.");
+      return;
+    }
+    const hub = nodes.find(n => String(n.id) === String(newSlotHubId));
+    const newSlot = {
+      id: `SLOT-${Date.now().toString().slice(-6)}`,
+      hubId: newSlotHubId,
+      hubName: hub ? hub.name : 'Solar Grid Hub',
+      date: newSlotDate,
+      startTime: newSlotStart,
+      endTime: newSlotEnd,
+      capacityKwh: parseFloat(newSlotCap) || 20,
+      batterySlots: parseInt(newSlotSlots, 10) || 4,
+      status: 'Available',
+      ratePerKwh: parseFloat(newSlotRate) || 0.35
+    };
+    const updated = [newSlot, ...energySlots];
+    setEnergySlots(updated);
+    localStorage.setItem('custom_energy_slots', JSON.stringify(updated));
+    alert("Energy slot created successfully!");
+  };
+
+  const handleUpdateEnergySlot = (updatedSlot) => {
+    const updated = energySlots.map(s => s.id === updatedSlot.id ? updatedSlot : s);
+    setEnergySlots(updated);
+    localStorage.setItem('custom_energy_slots', JSON.stringify(updated));
+    setEditingSlot(null);
+  };
+
+  const handleDeleteEnergySlot = (slotId) => {
+    if (!window.confirm("Are you sure you want to delete this energy slot?")) return;
+    const updated = energySlots.filter(s => s.id !== slotId);
+    setEnergySlots(updated);
+    localStorage.setItem('custom_energy_slots', JSON.stringify(updated));
+    setEditingSlot(null);
+  };
+
   const handleUpdateNode = async (updatedNode) => {
-    // 1. Immediately update React state for instant UI update
     setNodes(prev => prev.map(n => (n.id === updatedNode.id ? updatedNode : n)));
 
-    // 2. Persist locally in localStorage so page reload preserves edits
     try {
       const saved = JSON.parse(localStorage.getItem('custom_nodes_edits') || '{}');
       saved[updatedNode.id] = updatedNode;
@@ -127,9 +244,8 @@ export default function BackofficeDashboard() {
       console.error("Failed to save to localStorage", err);
     }
 
-    // 3. Attempt non-blocking backend sync (if backend is active)
     try {
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/nodes/${updatedNode.id}`, updatedNode);
+      await axios.put(apiUrl(`/api/nodes/${updatedNode.id}`), updatedNode);
     } catch (e) {
       console.log("Backend sync skipped/failed, saved to frontend state successfully.");
     }
@@ -138,7 +254,6 @@ export default function BackofficeDashboard() {
   };
 
   const handleDeactivateNode = async (id) => {
-    // 1. Update frontend state immediately
     const updated = nodes.map(n => (n.id === id ? { ...n, isActive: false } : n));
     setNodes(updated);
 
@@ -151,9 +266,8 @@ export default function BackofficeDashboard() {
       }
     } catch {}
 
-    // 2. Send backend deactivation request
     try {
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/nodes/deactivate/${id}`);
+      await axios.put(apiUrl(`/api/nodes/deactivate/${id}`));
     } catch (e) {
       console.log("Backend deactivate endpoint notice, frontend updated.");
     }
@@ -170,7 +284,7 @@ export default function BackofficeDashboard() {
         saved[id] = target;
         localStorage.setItem('custom_nodes_edits', JSON.stringify(saved));
       }
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/nodes/${id}`, target);
+      await axios.put(apiUrl(`/api/nodes/${id}`), target);
     } catch (e) {
       console.log("Backend activate sync notice, frontend updated.");
     }
@@ -178,7 +292,7 @@ export default function BackofficeDashboard() {
 
   const handleDeactivateUser = async (nic) => {
     try {
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/users/deactivate/${nic}`);
+      await axios.put(apiUrl(`/api/users/deactivate/${nic}`));
       fetchData();
     } catch (e) {
       alert("Failed to deactivate user.");
@@ -187,7 +301,7 @@ export default function BackofficeDashboard() {
 
   const handleActivateUser = async (nic) => {
     try {
-      await axios.put(`https://smart-solar-microgrid.onrender.com/api/users/activate/${nic}`);
+      await axios.put(apiUrl(`/api/users/activate/${nic}`));
       fetchData();
     } catch (e) {
       alert("Failed to activate user.");
@@ -199,14 +313,14 @@ export default function BackofficeDashboard() {
     try {
       const newNode = {
         name: nodeName,
-        latitude: 6.9271, // Mock GPS
-        longitude: 79.8612,
+        latitude: parseFloat(nodeLat) || 6.9271,
+        longitude: parseFloat(nodeLng) || 79.8612,
         capacityKwh: parseFloat(capacity),
         availableBatterySlots: parseInt(batterySlots),
         isActive: true,
-        operatingSchedule: "08:00-18:00"
+        operatingSchedule: nodeSchedule || "08:00-18:00"
       };
-      await axios.post('https://smart-solar-microgrid.onrender.com/api/nodes', newNode);
+      await axios.post(apiUrl('/api/nodes'), newNode);
       setNodeName(''); setCapacity(''); setBatterySlots('');
       fetchData();
     } catch (e) {
@@ -522,6 +636,23 @@ export default function BackofficeDashboard() {
         .bo-hub-foot .bo-btn { justify-content: center; }
         .bo-noaction { display: block; text-align: center; font-size: 13px; color: var(--muted); padding: 8px 0; }
 
+        /* ---- Energy slots ---- */
+        .bo-slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-top: 16px; }
+        .bo-slot-card {
+          background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+          padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;
+          transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        .bo-slot-card:hover { border-color: #B8C7C0; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+        .bo-slot-top { display: flex; align-items: center; justify-content: space-between; }
+        .bo-slot-time { font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+        .bo-slot-hub { font-size: 13px; font-weight: 600; color: var(--body); display: flex; align-items: center; gap: 6px; }
+        .bo-slot-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #F3F6F4; border-radius: 12px; padding: 10px 12px; }
+        .bo-slot-stat b { display: block; font-family: 'Sora', sans-serif; font-size: 16px; color: var(--ink); }
+        .bo-slot-stat small { font-size: 11.5px; color: var(--muted); }
+        .bo-slot-actions { display: flex; gap: 8px; margin-top: 4px; }
+        .bo-slot-actions .bo-btn { flex: 1; justify-content: center; }
+
         .bo-foot { margin-top: 48px; text-align: center; font-size: 12px; color: var(--muted); }
 
         @media (max-width: 1100px) {
@@ -566,6 +697,9 @@ export default function BackofficeDashboard() {
           <button role="tab" aria-selected={activeTab === 'nodes'} className={`bo-tab ${activeTab === 'nodes' ? 'active' : ''}`} onClick={() => setActiveTab('nodes')}>
             Microgrid Hubs
           </button>
+          <button role="tab" aria-selected={activeTab === 'slots'} className={`bo-tab ${activeTab === 'slots' ? 'active' : ''}`} onClick={() => setActiveTab('slots')}>
+            Energy Slots
+          </button>
         </div>
 
         <div className="bo-user">
@@ -579,6 +713,15 @@ export default function BackofficeDashboard() {
           node={editingNode}
           onClose={() => setEditingNode(null)}
           onSave={handleUpdateNode}
+        />
+      )}
+      {editingSlot && (
+        <EditEnergySlotModal
+          slot={editingSlot}
+          nodes={nodes}
+          onClose={() => setEditingSlot(null)}
+          onSave={handleUpdateEnergySlot}
+          onDelete={handleDeleteEnergySlot}
         />
       )}
 
@@ -754,9 +897,23 @@ export default function BackofficeDashboard() {
                       <input id="bo-slots" type="number" placeholder="Slots" value={batterySlots} onChange={e => setBatterySlots(e.target.value)} className="bo-input" required />
                     </div>
                   </div>
+                  <div className="bo-row2">
+                    <div className="bo-field">
+                      <label htmlFor="bo-lat">Latitude (GPS)</label>
+                      <input id="bo-lat" type="number" step="any" placeholder="6.9271" value={nodeLat} onChange={e => setNodeLat(e.target.value)} className="bo-input" />
+                    </div>
+                    <div className="bo-field">
+                      <label htmlFor="bo-lng">Longitude (GPS)</label>
+                      <input id="bo-lng" type="number" step="any" placeholder="79.8612" value={nodeLng} onChange={e => setNodeLng(e.target.value)} className="bo-input" />
+                    </div>
+                  </div>
+                  <div className="bo-field">
+                    <label htmlFor="bo-sched">Operating Schedule</label>
+                    <input id="bo-sched" type="text" placeholder="08:00-18:00" value={nodeSchedule} onChange={e => setNodeSchedule(e.target.value)} className="bo-input" />
+                  </div>
                   <div className="bo-note">
                     <MapPin size={14} />
-                    <span>New hubs start active, open 08:00–18:00, and use the Colombo grid reference for their coordinates.</span>
+                    <span>Coordinates and operating schedule will be stored and mapped across the solar microgrid.</span>
                   </div>
                   <button type="submit" className="bo-btn bo-submit"><Plus size={17} />Create hub</button>
                 </div>
@@ -796,9 +953,18 @@ export default function BackofficeDashboard() {
             <div className="bo-sec-head">
               <div>
                 <h3 className="bo-display">Microgrid hubs</h3>
-                <span>Coordinates default to the Colombo grid reference.</span>
+                <span>Manage GPS coordinates, battery storage slots, and energy capacity.</span>
               </div>
               <div className="bo-chips">
+                <button
+                  type="button"
+                  className={`bo-chip ${showHubMap ? 'active' : ''}`}
+                  onClick={() => setShowHubMap(!showHubMap)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <MapPin size={12} />
+                  {showHubMap ? 'Hide Google Map' : 'Show Google Map'}
+                </button>
                 {['All', 'Accepting', 'Offline'].map(f => (
                   <button key={f} className={`bo-chip ${hubFilter === f ? 'active' : ''}`} onClick={() => setHubFilter(f)}>
                     {f} {f === 'All' ? nodes.length : f === 'Accepting' ? activeNodes.length : offlineNodes}
@@ -806,6 +972,14 @@ export default function BackofficeDashboard() {
                 ))}
               </div>
             </div>
+
+            {/* Google Maps Integration */}
+            {showHubMap && (
+              <MicrogridGoogleMap
+                nodes={visibleNodes.length > 0 ? visibleNodes : nodes}
+                onEditNode={setEditingNode}
+              />
+            )}
 
             <div className="bo-hubs">
               {loaded && nodes.length === 0 && <div className="bo-empty">No hubs registered. Add the first one above.</div>}
@@ -824,7 +998,16 @@ export default function BackofficeDashboard() {
                       <h4 className="bo-hub-name">{n.name}</h4>
                       <div className="bo-hub-loc">
                         {n.latitude != null && n.longitude != null && (
-                          <><MapPin size={12} />{Number(n.latitude).toFixed(3)}, {Number(n.longitude).toFixed(3)}</>
+                          <a
+                            href={`https://www.google.com/maps?q=${n.latitude},${n.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#146B5C', textDecoration: 'none', fontWeight: 500 }}
+                            title="Open GPS in Google Maps"
+                          >
+                            <MapPin size={12} />GPS: {Number(n.latitude).toFixed(4)}, {Number(n.longitude).toFixed(4)}
+                            <ExternalLink size={10} style={{ opacity: 0.7 }} />
+                          </a>
                         )}
                       </div>
                       <div className="bo-hub-stats">
@@ -864,6 +1047,247 @@ export default function BackofficeDashboard() {
                   </div>
                 );
               })}
+            </div>
+          </>
+        )}
+
+        {/* ============================ ENERGY SLOTS TAB ============================ */}
+        {activeTab === 'slots' && (
+          <>
+            <div className="bo-split">
+              {/* Create energy slot form */}
+              <form onSubmit={handleCreateEnergySlot} className="bo-formcard">
+                <div className="bo-form-photo">
+                  <Photo id={HERO_PHOTO} w={800} alt="" />
+                  <h3 className="bo-display">Create energy slot</h3>
+                </div>
+                <div className="bo-form-body">
+                  <div className="bo-field">
+                    <label htmlFor="slot-hub-create">Assigned hub</label>
+                    <select
+                      id="slot-hub-create"
+                      value={newSlotHubId}
+                      onChange={e => setNewSlotHubId(e.target.value)}
+                      className="bo-input"
+                      required
+                    >
+                      <option value="">Select a microgrid hub</option>
+                      {nodes.map(n => (
+                        <option key={n.id} value={n.id}>{n.name} ({n.capacityKwh} kWh)</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="bo-field">
+                    <label htmlFor="slot-date-create">Date</label>
+                    <input
+                      id="slot-date-create"
+                      type="date"
+                      value={newSlotDate}
+                      onChange={e => setNewSlotDate(e.target.value)}
+                      className="bo-input"
+                      required
+                    />
+                  </div>
+
+                  <div className="bo-row2">
+                    <div className="bo-field">
+                      <label htmlFor="slot-start-create">Start time</label>
+                      <input
+                        id="slot-start-create"
+                        type="time"
+                        value={newSlotStart}
+                        onChange={e => setNewSlotStart(e.target.value)}
+                        className="bo-input"
+                        required
+                      />
+                    </div>
+                    <div className="bo-field">
+                      <label htmlFor="slot-end-create">End time</label>
+                      <input
+                        id="slot-end-create"
+                        type="time"
+                        value={newSlotEnd}
+                        onChange={e => setNewSlotEnd(e.target.value)}
+                        className="bo-input"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bo-row2">
+                    <div className="bo-field">
+                      <label htmlFor="slot-cap-create">Capacity (kWh)</label>
+                      <input
+                        id="slot-cap-create"
+                        type="number"
+                        step="0.5"
+                        min="1"
+                        placeholder="e.g. 25"
+                        value={newSlotCap}
+                        onChange={e => setNewSlotCap(e.target.value)}
+                        className="bo-input"
+                        required
+                      />
+                    </div>
+                    <div className="bo-field">
+                      <label htmlFor="slot-slots-create">Battery slots</label>
+                      <input
+                        id="slot-slots-create"
+                        type="number"
+                        min="1"
+                        placeholder="e.g. 4"
+                        value={newSlotSlots}
+                        onChange={e => setNewSlotSlots(e.target.value)}
+                        className="bo-input"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bo-field">
+                    <label htmlFor="slot-rate-create">Tariff / Credit ($/kWh)</label>
+                    <input
+                      id="slot-rate-create"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newSlotRate}
+                      onChange={e => setNewSlotRate(e.target.value)}
+                      className="bo-input"
+                    />
+                  </div>
+
+                  <div className="bo-note">
+                    <Clock size={14} />
+                    <span>Energy slots define discrete time windows for prosumers to drop off power at this hub.</span>
+                  </div>
+
+                  <button type="submit" className="bo-btn bo-submit">
+                    <Plus size={17} />Create energy slot
+                  </button>
+                </div>
+              </form>
+
+              {/* Energy slots overview stats */}
+              <div className="bo-card">
+                <h3 className="bo-display">Energy slots summary</h3>
+                <p>{energySlots.filter(s => s.status === 'Available').length} available · {energySlots.filter(s => s.status === 'Booked').length} booked · {energySlots.filter(s => s.status === 'Maintenance').length} maintenance</p>
+
+                <div className="bo-donut-wrap" style={{ marginTop: '16px' }}>
+                  <Donut
+                    total={energySlots.length}
+                    unit={energySlots.length === 1 ? 'slot' : 'slots'}
+                    segments={[
+                      { name: 'Available', value: energySlots.filter(s => s.status === 'Available').length, color: '#146B5C' },
+                      { name: 'Booked', value: energySlots.filter(s => s.status === 'Booked').length, color: '#E08E2B' },
+                      { name: 'Maintenance', value: energySlots.filter(s => s.status === 'Maintenance').length, color: '#C4CFC9' },
+                    ]}
+                  />
+                  <div className="bo-legend">
+                    <div><span><i style={{ background: '#146B5C' }} />Available</span><b>{energySlots.filter(s => s.status === 'Available').length}</b></div>
+                    <div><span><i style={{ background: '#E08E2B' }} />Booked</span><b>{energySlots.filter(s => s.status === 'Booked').length}</b></div>
+                    <div><span><i style={{ background: '#C4CFC9' }} />Maintenance</span><b>{energySlots.filter(s => s.status === 'Maintenance').length}</b></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Toolbar for Energy Slots */}
+            <div className="bo-sec-head">
+              <div>
+                <h3 className="bo-display">Available & scheduled energy slots</h3>
+                <span>View and maintain active booking slots across all hubs.</span>
+              </div>
+              <div className="bo-toolbar">
+                <select
+                  value={slotFilterHub}
+                  onChange={e => setSlotFilterHub(e.target.value)}
+                  className="bo-chip"
+                  style={{ outline: 'none', cursor: 'pointer', paddingRight: '28px' }}
+                >
+                  <option value="All">All Hubs</option>
+                  {nodes.map(n => (
+                    <option key={n.id} value={n.id}>{n.name}</option>
+                  ))}
+                </select>
+
+                <div className="bo-chips">
+                  {['All', 'Available', 'Booked', 'Maintenance'].map(st => (
+                    <button
+                      key={st}
+                      className={`bo-chip ${slotFilterStatus === st ? 'active' : ''}`}
+                      onClick={() => setSlotFilterStatus(st)}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Grid of Energy Slots */}
+            <div className="bo-slot-grid">
+              {energySlots
+                .filter(s => slotFilterHub === 'All' || String(s.hubId) === String(slotFilterHub))
+                .filter(s => slotFilterStatus === 'All' || s.status === slotFilterStatus)
+                .map(slot => (
+                  <div className="bo-slot-card" key={slot.id}>
+                    <div className="bo-slot-top">
+                      <div className="bo-slot-time">
+                        <Clock size={16} color="#146B5C" />
+                        <span>{slot.startTime} – {slot.endTime}</span>
+                      </div>
+                      <span className={`bo-hub-pill ${slot.status === 'Available' ? 'bo-on' : slot.status === 'Booked' ? 'bo-off' : ''}`} style={{ position: 'static' }}>
+                        <i />{slot.status}
+                      </span>
+                    </div>
+
+                    <div className="bo-slot-hub">
+                      <Zap size={14} color="#E08E2B" />
+                      <span>{slot.hubName}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: '#5F6F67' }}>
+                      <Calendar size={13} />
+                      <span>{slot.date}</span>
+                      <span style={{ margin: '0 4px' }}>&middot;</span>
+                      <span>Tariff: <b>${slot.ratePerKwh}/kWh</b></span>
+                    </div>
+
+                    <div className="bo-slot-stats">
+                      <div className="bo-slot-stat">
+                        <b>{slot.capacityKwh} kWh</b>
+                        <small>Slot capacity</small>
+                      </div>
+                      <div className="bo-slot-stat">
+                        <b>{slot.batterySlots} slots</b>
+                        <small>Battery slots</small>
+                      </div>
+                    </div>
+
+                    <div className="bo-slot-actions">
+                      <button
+                        type="button"
+                        onClick={() => setEditingSlot(slot)}
+                        className="bo-btn bo-btn-sm bo-edit-btn"
+                      >
+                        <Edit2 size={13} />Edit slot
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteEnergySlot(slot.id)}
+                        className="bo-btn bo-btn-sm bo-caution"
+                        title="Delete slot"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              {energySlots.length === 0 && (
+                <div className="bo-empty">No energy slots found. Create the first slot above.</div>
+              )}
             </div>
           </>
         )}

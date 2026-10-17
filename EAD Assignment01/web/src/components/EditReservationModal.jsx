@@ -1,7 +1,18 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: EditReservationModal
+ * Description: Modal dialog for prosumers and operators to modify scheduled energy trading bookings.
+ */
+
 import React, { useState } from 'react';
 import { X, CalendarClock, Check, AlertCircle, Zap, MapPin, ShieldCheck } from 'lucide-react';
 
+/**
+ * EditReservationModal handles editing reservation details including node, energy amount, and date.
+ */
 export default function EditReservationModal({ reservation, nodes = [], onClose, onSave }) {
+  // Formats ISO date string to datetime-local input format
   const formatForInput = (isoStr) => {
     if (!isoStr) return '';
     const d = new Date(isoStr);
@@ -10,6 +21,7 @@ export default function EditReservationModal({ reservation, nodes = [], onClose,
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
+  // Local state for editable reservation properties
   const [selectedNodeId, setSelectedNodeId] = useState(reservation?.microgridNodeId || '');
   const [energyAmount, setEnergyAmount] = useState(reservation?.energyAmountKwh ?? '');
   const [scheduledDateTime, setScheduledDateTime] = useState(formatForInput(reservation?.scheduledTime));
@@ -19,6 +31,7 @@ export default function EditReservationModal({ reservation, nodes = [], onClose,
 
   if (!reservation) return null;
 
+  // Validate form fields, enforce status-dependent QR generation, and submit updates
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');

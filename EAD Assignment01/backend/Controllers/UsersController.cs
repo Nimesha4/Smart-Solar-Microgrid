@@ -1,10 +1,18 @@
+// ============================================================================
+// Course: SE4040 - Enterprise Application Development
+// Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+// File: UsersController.cs
+// Description: REST Controller handling user registration, authentication, 
+//              role verification, and profile management with NIC primary key.
+// ============================================================================
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartSolar.Backend.Models;
 using SmartSolar.Backend.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
+using SmartSolar.Backend.Validators;
 namespace SmartSolar.Backend.Controllers
 {
     [ApiController]
@@ -13,15 +21,22 @@ namespace SmartSolar.Backend.Controllers
     {
         private readonly UserService _userService;
 
+        // Constructor: Injects the central UserService instance
         public UsersController(UserService userService)
         {
             _userService = userService;
         }
 
+        /// <summary>
+        /// Retrieves all registered user accounts from MongoDB.
+        /// </summary>
         [HttpGet]
         public async Task<List<User>> Get() =>
             await _userService.GetAsync();
 
+        /// <summary>
+        /// Retrieves a single user profile using their NIC as primary key.
+        /// </summary>
         [HttpGet("{nic}")]
         public async Task<ActionResult<User>> Get(string nic)
         {
@@ -33,18 +48,41 @@ namespace SmartSolar.Backend.Controllers
             return user;
         }
 
+        /// <summary>
+        /// Registers a new user. Enforces Prosumer role on public signup and checks NIC uniqueness.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] UserRegisterDto newUser)
         {
             if (newUser == null ||
-                string.IsNullOrWhiteSpace(newUser.Nic) ||
-                string.IsNullOrWhiteSpace(newUser.Password))
+    string.IsNullOrWhiteSpace(newUser.Nic) ||
+    string.IsNullOrWhiteSpace(newUser.Password))
             {
-                return BadRequest(new { message = "NIC and password are required." });
+                return BadRequest(new
+                {
+                    message = "NIC and password are required."
+                });
             }
 
-            var cleanNic = newUser.Nic.Trim();
+            string cleanNic = newUser.Nic.Trim();
+
+            if (!NicValidator.IsValid(cleanNic))
+            {
+                return BadRequest(new
+                {
+                    message = "Invalid NIC format. Use 9 digits followed by V/X, or 12 digits."
+                });
+            }
+
             var existing = await _userService.GetAsync(cleanNic);
+
+            if (existing is not null)
+            {
+                return Conflict(new
+                {
+                    message = "User with this NIC already exists."
+                });
+            }
             if (existing is not null)
                 return Conflict(new { message = "User with this NIC already exists." });
 
@@ -74,12 +112,15 @@ namespace SmartSolar.Backend.Controllers
             );
         }
 
+        /// <summary>
+        /// Authenticates user credentials against PBKDF2 hashed password and ensures account is active.
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto login)
         {
             if (login == null ||
-                string.IsNullOrWhiteSpace(login.Nic) ||
-                string.IsNullOrEmpty(login.Password))
+            string.IsNullOrWhiteSpace(login.Nic) ||
+            string.IsNullOrEmpty(login.Password))
             {
                 return BadRequest(new
                 {
@@ -87,8 +128,17 @@ namespace SmartSolar.Backend.Controllers
                 });
             }
 
-            var user = await _userService.GetAsync(login.Nic.Trim());
+            string cleanNic = login.Nic.Trim();
 
+            if (!NicValidator.IsValid(cleanNic))
+            {
+                return BadRequest(new
+                {
+                    message = "Invalid NIC format."
+                });
+            }
+
+            var user = await _userService.GetAsync(cleanNic);
             if (user == null ||
                 !PasswordHasher.VerifyHashedPassword(
                     user.PasswordHash,
@@ -119,9 +169,27 @@ namespace SmartSolar.Backend.Controllers
             });
         }
 
+        /// <summary>
+        /// Updates profile information for an existing user while preserving security credentials.
+        /// </summary>
         [HttpPut("{nic}")]
         public async Task<IActionResult> Put(string nic, User updatedUser)
         {
+            if (!NicValidator.IsValid(nic))
+            {
+                return BadRequest(new
+                {
+                    message = "Invalid NIC format."
+                });
+            }
+
+            if (updatedUser == null)
+            {
+                return BadRequest(new
+                {
+                    message = "User data is required."
+                });
+            }
             var user = await _userService.GetAsync(nic);
             if (user is null)
                 return NotFound();
@@ -137,6 +205,9 @@ namespace SmartSolar.Backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Deactivates a user account, preventing further logins until reactivated by Backoffice.
+        /// </summary>
         [HttpPut("deactivate/{nic}")]
         public async Task<IActionResult> Deactivate(string nic)
         {
@@ -148,6 +219,9 @@ namespace SmartSolar.Backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Reactivates a deactivated user account (Backoffice authorization).
+        /// </summary>
         [HttpPut("activate/{nic}")]
         public async Task<IActionResult> Activate(string nic)
         {
@@ -159,6 +233,9 @@ namespace SmartSolar.Backend.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Permanently deletes a user profile from the system.
+        /// </summary>
         [HttpDelete("{nic}")]
         public async Task<IActionResult> Delete(string nic)
         {

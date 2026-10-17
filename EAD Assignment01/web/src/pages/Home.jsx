@@ -1,3 +1,10 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: Home
+ * Description: Landing portal showcasing system capabilities, role portals, and solar trading features.
+ */
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {

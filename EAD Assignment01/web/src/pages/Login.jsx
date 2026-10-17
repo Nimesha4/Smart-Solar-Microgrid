@@ -1,9 +1,17 @@
+/**
+ * Course: SE4040 - Enterprise Application Development
+ * Assignment: Assignment 1 - Smart Solar Microgrid Trading System
+ * Component: Login
+ * Description: Authentication interface supporting role-based redirection for Backoffice, GridOperator, and Prosumer.
+ */
+
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import {
   Sun, IdCard, Lock, ArrowRight, AlertCircle, Eye, EyeOff, Wrench, ShieldCheck,
 } from 'lucide-react';
+import { apiUrl } from '../config';
 
 /* ------------------------------------------------------------------ */
 /*  Photos: your own copy -> Pexels -> drawn solar artwork.           */
@@ -72,7 +80,7 @@ function SolarArt({ className = '' }) {
       <rect width="1600" height="430" fill="url(#lgArtSky)" />
       <circle cx="1120" cy="330" r="340" fill="url(#lgArtSun)" />
       <circle cx="1120" cy="330" r="48" fill="#FFF1D2" />
-      <rect y="420" width="1600" height="480" fill="url(#lgArtGround)" />
+      <rect y="420" width="1600" height="480" fill="url(#lgArtground)" />
       {items}
     </svg>
   );
@@ -108,7 +116,7 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await axios.post(
-        'https://smart-solar-microgrid.onrender.com/api/users/login',
+        apiUrl('/api/users/login'),
         {
           nic: nic.trim(),
           password: password
