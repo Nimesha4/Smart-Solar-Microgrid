@@ -298,7 +298,7 @@ export default function ProsumerDashboard() {
   };
 
   const logout = () => {
-    clearAuthSession();
+    localStorage.clear();
     navigate('/login');
   };
 

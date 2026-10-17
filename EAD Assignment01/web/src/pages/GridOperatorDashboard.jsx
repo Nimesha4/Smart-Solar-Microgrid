@@ -15,7 +15,6 @@ import {
 import ProfileModal from '../components/ProfileModal';
 import HeaderMenu from '../components/HeaderMenu';
 import { apiUrl } from '../config';
-import { clearAuthSession } from '../auth';
 
 
 /* ------------------------------------------------------------------ */
@@ -238,7 +237,7 @@ export default function GridOperatorDashboard() {
   };
 
   const logout = () => {
-    clearAuthSession();
+    localStorage.clear();
     navigate('/login');
   };
 

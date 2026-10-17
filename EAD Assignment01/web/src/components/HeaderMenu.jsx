@@ -8,7 +8,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Menu, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { clearAuthSession } from '../auth';
 
 /**
  * HeaderMenu provides a responsive user actions menu with click-outside listener.
@@ -29,7 +28,7 @@ export default function HeaderMenu({ onProfileClick }) {
   }, []);
 
   const handleLogout = () => {
-    clearAuthSession();
+    localStorage.clear();
     navigate('/login');
   };
 

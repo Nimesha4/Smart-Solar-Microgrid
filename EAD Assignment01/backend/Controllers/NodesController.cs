@@ -7,7 +7,6 @@
 //              and reservation-dependent deactivation business rules.
 // ============================================================================
 
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartSolar.Backend.Models;
 using SmartSolar.Backend.Services;
@@ -18,7 +17,6 @@ namespace SmartSolar.Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class NodesController : ControllerBase
     {
         private readonly MicrogridNodeService _nodeService;
@@ -35,7 +33,6 @@ namespace SmartSolar.Backend.Controllers
         /// Retrieves all registered solar microgrid hubs.
         /// </summary>
         [HttpGet]
-        [AllowAnonymous]
         public async Task<List<MicrogridNode>> Get() =>
             await _nodeService.GetAsync();
 
@@ -43,7 +40,6 @@ namespace SmartSolar.Backend.Controllers
         /// Retrieves details of a specific microgrid hub by its unique ID.
         /// </summary>
         [HttpGet("{id}")]
-        [AllowAnonymous]
         public async Task<ActionResult<MicrogridNode>> Get(string id)
         {
             var node = await _nodeService.GetAsync(id);
@@ -58,7 +54,6 @@ namespace SmartSolar.Backend.Controllers
         /// Registers a new microgrid hub with GPS coordinates, capacity, and available battery slots.
         /// </summary>
         [HttpPost]
-        [Authorize(Policy = "BackofficeOnly")]
         public async Task<IActionResult> Post(MicrogridNode newNode)
         {
             await _nodeService.CreateAsync(newNode);
@@ -69,7 +64,6 @@ namespace SmartSolar.Backend.Controllers
         /// Updates an existing microgrid hub's parameters (capacity, slots, schedule, or coordinates).
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Policy = "BackofficeOnly")]
         public async Task<IActionResult> Put(string id, MicrogridNode updatedNode)
         {
             var node = await _nodeService.GetAsync(id);
@@ -85,7 +79,6 @@ namespace SmartSolar.Backend.Controllers
         /// Deactivates a microgrid hub. Enforces assignment rule: blocks deactivation if active reservations exist.
         /// </summary>
         [HttpPut("deactivate/{id}")]
-        [Authorize(Policy = "BackofficeOnly")]
         public async Task<IActionResult> Deactivate(string id)
         {
             var node = await _nodeService.GetAsync(id);
@@ -109,7 +102,6 @@ namespace SmartSolar.Backend.Controllers
         /// Removes a microgrid hub record permanently from the database.
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Policy = "BackofficeOnly")]
         public async Task<IActionResult> Delete(string id)
         {
             var node = await _nodeService.GetAsync(id);
