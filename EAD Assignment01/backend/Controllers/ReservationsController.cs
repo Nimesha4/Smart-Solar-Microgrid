@@ -29,7 +29,7 @@ namespace SmartSolar.Backend.Controllers
         }
 
         /// <summary>
-        /// Retrieves all energy trading reservations across the microgrid network.
+        /// Retrieves all  energy trading reservations across the microgrid network.
         /// </summary>
         [HttpGet]
         public async Task<List<Reservation>> Get() =>
